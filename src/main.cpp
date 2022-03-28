@@ -1,36 +1,23 @@
 #include <Arduino.h>
+#include <Thread.h>
 #include "Gyroscope/Gyroscope.h"
-//#include "SmokeDetector/SmokeDetector.h"
+#include "SmokeDetector/SmokeDetector.h"
 #include "Rangefinder/Rangefinder.h"
-#include "WiFi.h"
+#include <WiFiManager.h>
 
-const char* ssid = "Galaxy S20+9de1";
-const char* password = "987654321";
+/* Wi-Fi клиент */
+WiFiManager client;
 
-char lineBuf[80];
-int charCount = 0;
-WiFiServer server(80);
+/* Поток вывода сообщений */
+auto printThread = Thread();
 
+/* Датчики */
 auto gyroscope = Gyroscope();
-//auto smokeDetector = SmokeDetector(1);
+auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
 
-void setup() {
-    Serial.begin(9600);
-    //smokeDetector.calibrate();
-
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to Wi-Fi..");
-    }
-    Serial.println("Connected to the Wi-Fi network");
-    Serial.println("IP-address: ");
-    Serial.println(WiFi.localIP());
-    server.begin();
-}
-
-void loop() {
+/* Выводит местоположение каски */
+void printAxis() {
     auto axis = gyroscope.getAxis();
 
     Serial.println("Местоположение:");
@@ -41,60 +28,57 @@ void loop() {
         axis.getY(),
         axis.getZ()
     );
+}
 
-    //auto smokeValue = smokeDetector.read();
+/* Выводит значение уровня задымления вокруг каски */
+void printSmokeValue() {
+    auto smokeValue = smokeDetector.read();
 
-    //Serial.println("Задымленность:");
-    //Serial.printf("%.2f\n\n", smokeValue);
+    Serial.println("Задымленность:");
+    Serial.printf("%.2f\n\n", smokeValue);
+}
 
+/* Выводит расстояние до объекта в поле зрения датчика приближения */
+void printDistance() {
     auto distance = rangefinder.read();
 
     Serial.println("Расстояние:");
     Serial.printf("%.2f\n\n", distance);
+}
 
-    delay(1000);
+/*  
+    Подключает Wi-Fi клиент к точке доступа.
+    В случае, если пользователь не подключился, создает собственную точку доступа и ожидает
+ */
+void connectToWifi() {
+    auto isConnected = client.autoConnect("TestConnect", "password");
 
-
-
-
-
-    WiFiClient client = server.available();
-    if (client) {
-        Serial.println("New client");
-        memset(lineBuf, 0, sizeof(lineBuf));
-        charCount = 0;
-        // HTTP-запрос заканчивается пустой строкой
-        boolean currentLineIsBlank = true;
-        while (client.connected()) {
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-Type: text/html");
-            client.println("Connection: close");
-            client.println();
-            // формируем веб-страницу
-            String webPage = "<!DOCTYPE HTML>";
-            webPage += "<html>";
-            webPage += "  <head>";
-            webPage += "    <meta name=\"viewport\" content=\"width=device-width,";
-            webPage += "    initial-scale=1\">";
-            webPage += "  </head>";
-            webPage += "  <h1>ESP32 - Web Server</h1>";
-            webPage += "  <p>";
-            webPage += "  	Местоположение: (";
-            webPage += 		axis.getX();
-            webPage +=      ", ";
-            webPage +=      axis.getY();
-            webPage +=      ", ";
-            webPage +=      axis.getZ();
-            webPage += ")   <br>";
-            webPage += "  	Расстояние = ";
-            webPage += 		distance;
-            webPage += "	<br>";
-            webPage += "  </p>";
-            webPage += "</html>";
-            client.println(webPage);
-            break;
-        }
-        // даем веб-браузеру время для получения данных
-        delay(1);
+    if (!isConnected)
+    {
+        Serial.println("Failed to connect");
     }
+    else
+    {
+        Serial.println("Connected");
+    }
+}
+
+/* Настраивает плату */
+void setup() {
+    Serial.begin(115200);
+
+    printThread.setInterval(1000);
+    printThread.onRun([]() 
+    {
+        printAxis();
+        printSmokeValue();
+        printDistance();
+    });
+
+    connectToWifi();
+}
+
+/* Основной цикл */
+void loop() {
+    printThread.safeRun();
 }
