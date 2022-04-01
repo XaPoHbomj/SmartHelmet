@@ -1,5 +1,5 @@
-#ifndef GYROSCOPOE_H
-#define GYROSCOPOE_H
+#ifndef GYROSCOPE_H
+#define GYROSCOPE_H
 
 #include "SparkFun_ADXL345.h"
 #include "GyroscopeAxis.h"

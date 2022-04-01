@@ -1,5 +1,5 @@
-#ifndef GYROSCOPE_H
-#define GYROSCOPE_H
+#ifndef GYROSCOPEAXIS_H
+#define GYROSCOPEAXIS_H
 
 /* Представляет координаты по осям X, Y и Z */
 struct GyroscopeAxis 
