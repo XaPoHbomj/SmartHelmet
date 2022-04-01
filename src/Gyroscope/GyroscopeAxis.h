@@ -1,3 +1,6 @@
+#ifndef GYROSCOPE_H
+#define GYROSCOPE_H
+
 /* Представляет координаты по осям X, Y и Z */
 struct GyroscopeAxis 
 {
@@ -18,3 +21,5 @@ struct GyroscopeAxis
         /* Получает координату по оси Z */
         double getZ();
 };
+
+#endif

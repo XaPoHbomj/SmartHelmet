@@ -1,3 +1,6 @@
+#ifndef GYROSCOPOE_H
+#define GYROSCOPOE_H
+
 #include "SparkFun_ADXL345.h"
 #include "GyroscopeAxis.h"
 
@@ -15,3 +18,5 @@ class Gyroscope
 		/* Получает координаты по осям */
 		GyroscopeAxis getAxis();
 };
+
+#endif
