@@ -4,6 +4,52 @@
 #include "SmokeDetector/SmokeDetector.h"
 #include "Rangefinder/Rangefinder.h"
 #include <WiFiManager.h>
+#include "SD.h"
+#include "FS.h"
+#include "SPI.h"
+
+/* Пытается инициализировать SD карту и определяет ее доступность */
+bool trySetupSecureDigitalCard() 
+{
+    if (!SD.begin())
+    {
+        Serial.println("SD Card mount failed");
+
+        return false;
+    }
+
+    auto cardType = SD.cardType();
+
+    if (cardType == CARD_NONE || cardType == CARD_UNKNOWN)
+    {
+        Serial.println("SD Card is missing");
+
+        return false;
+    }
+
+    Serial.printf("SD Card Type: %d\n", cardType);
+    auto mibs = 1024 * 1024;
+
+    Serial.printf
+    (
+        "SD Card size: %llu MiB\n", 
+        SD.cardSize() / mibs
+    );
+
+    Serial.printf
+    (
+        "Total space: %llu MiB\n", 
+        SD.totalBytes() / mibs
+    );
+
+    Serial.printf
+    (
+        "Used space: %llu MiB\n", 
+        SD.usedBytes() / mibs
+    );
+
+    return true;
+}
 
 /* Wi-Fi клиент */
 WiFiManager client;
@@ -17,7 +63,8 @@ auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
 
 /* Выводит местоположение каски */
-void printAxis() {
+void printAxis() 
+{
     auto axis = gyroscope.getAxis();
 
     Serial.println("Местоположение:");
@@ -31,7 +78,8 @@ void printAxis() {
 }
 
 /* Выводит значение уровня задымления вокруг каски */
-void printSmokeValue() {
+void printSmokeValue() 
+{
     auto smokeValue = smokeDetector.read();
 
     Serial.println("Задымленность:");
@@ -39,7 +87,8 @@ void printSmokeValue() {
 }
 
 /* Выводит расстояние до объекта в поле зрения датчика приближения */
-void printDistance() {
+void printDistance() 
+{
     auto distance = rangefinder.read();
 
     Serial.println("Расстояние:");
@@ -50,7 +99,8 @@ void printDistance() {
     Подключает Wi-Fi клиент к точке доступа.
     В случае, если пользователь не подключился, создает собственную точку доступа и ожидает
  */
-void connectToWifi() {
+void connectToWifi() 
+{
     auto isConnected = client.autoConnect("TestConnect", "password");
 
     if (!isConnected)
@@ -64,7 +114,8 @@ void connectToWifi() {
 }
 
 /* Настраивает плату */
-void setup() {
+void setup() 
+{
     Serial.begin(115200);
 
     printThread.setInterval(1000);
@@ -75,10 +126,16 @@ void setup() {
         printDistance();
     });
 
+    while
+    (
+        !trySetupSecureDigitalCard()
+    );
+
     connectToWifi();
 }
 
 /* Основной цикл */
-void loop() {
-    printThread.safeRun();
+void loop() 
+{
+    //printThread.safeRun();
 }
