@@ -1,4 +1,4 @@
-namespace WebServer.Sensors;
+namespace WebServer.SensorsData;
 
 /// <summary>
 /// Представляет класс, хранящий информацию о гироскопе

@@ -6,6 +6,11 @@ namespace WebServer.Events;
 public abstract class EventBase
 {
     /// <summary>
+    /// Идентификатор платы
+    /// </summary>
+    public string BoardIdentificator { get; set; }
+
+    /// <summary>
     /// Дата и время получения события
     /// </summary>
     public DateTime DateTime { get; set; }

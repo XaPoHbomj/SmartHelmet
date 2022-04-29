@@ -28,8 +28,9 @@ public class BoardController : ControllerBase
     /// Принимает значения сенсоров
     /// </summary>
     /// <param name="event">Событие, содержащее значения сенсоров</param>
-    [HttpPost(template: "ReceiveSensorValues")]
-    public IActionResult OnReceiveSensorValues([FromBody] ReceiveSensorValuesEvent @event)
+    [HttpPost]
+    [Route("ReceiveSensorsData")]
+    public IActionResult OnSensorsDataChanged([FromBody] SensorsDataChangedEvent @event)
     {
         if (@event is null)
         {
@@ -49,6 +50,8 @@ public class BoardController : ControllerBase
                 @event.GetType()
             );
         }
+
+
         
         return Ok();
     }
