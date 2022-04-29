@@ -7,6 +7,22 @@
 #include "SD.h"
 #include "FS.h"
 #include "SPI.h"
+#include "ArduinoJson.h"
+
+/* MAC-адрес платы */
+auto boardIdentificator = ESP.getEfuseMac();
+
+/* Wi-Fi клиент */
+WiFiManager wifiClient;
+const char* endpoint = "https://localhost:47776"; // TODO: перенести в конфигурационный файл
+
+/* Поток вывода сообщений */
+auto sendDataToServerThread = Thread();
+
+/* Датчики */
+auto gyroscope = Gyroscope();
+auto smokeDetector = SmokeDetector(32);
+auto rangefinder = Rangefinder(16, 17);
 
 /* Пытается инициализировать SD карту и определяет ее доступность */
 bool trySetupSecureDigitalCard() 
@@ -51,48 +67,37 @@ bool trySetupSecureDigitalCard()
     return true;
 }
 
-/* Wi-Fi клиент */
-WiFiManager client;
-
-/* Поток вывода сообщений */
-auto printThread = Thread();
-
-/* Датчики */
-auto gyroscope = Gyroscope();
-auto smokeDetector = SmokeDetector(32);
-auto rangefinder = Rangefinder(16, 17);
-
-/* Выводит местоположение каски */
-void printAxis() 
-{
-    auto axis = gyroscope.getAxis();
-
-    Serial.println("Местоположение:");
-    Serial.printf
-    (
-        "(%.2f, %.2f, %.2f)\n\n",
-        axis.getX(),
-        axis.getY(),
-        axis.getZ()
+/* Заполняет указанный DynamicJsonDocument данными о плате */
+void fillBoardData(DynamicJsonDocument& document) {
+    document["boardIdentificator"] = boardIdentificator;
+    document["dateTime"] = "29.04.2022"; // TODO: добавить запись времени
+    document["batteryLevel"] = 100.0f; // TODO: добавить вывод заряда батареи
+    document["signalLevel"] = wifiClient.getRSSIasQuality(
+        WiFi.RSSI()
     );
 }
 
-/* Выводит значение уровня задымления вокруг каски */
-void printSmokeValue() 
-{
-    auto smokeValue = smokeDetector.read();
+/* Заполняет указанный DynamicJsonDocument данными с датчиков */
+void fillSensorsData(DynamicJsonDocument& document) {
+    auto gyroscopeValues = document.createNestedObject("gyroscope");
+    auto axis = gyroscope.getAxis();
+    gyroscopeValues["x"] = axis.getX();
+    gyroscopeValues["y"] = axis.getY();
+    gyroscopeValues["z"] = axis.getZ();
 
-    Serial.println("Задымленность:");
-    Serial.printf("%.2f\n\n", smokeValue);
+    document["distance"] = rangefinder.read();
+    document["smokeValue"] = smokeDetector.read();
+    document["isFellOff"] = false;
 }
 
-/* Выводит расстояние до объекта в поле зрения датчика приближения */
-void printDistance() 
-{
-    auto distance = rangefinder.read();
+/* Выводит указанный JSON в Serial */
+void printJsonToSerial(const char* json) {
+    Serial.printf("Сформировано: %s\n", json);
+}
 
-    Serial.println("Расстояние:");
-    Serial.printf("%.2f\n\n", distance);
+/* Отправляет JSON на сервер */
+void sendJsonToServer(const char* json) {
+    // TODO: Отправить JSON на сервер
 }
 
 /*  
@@ -101,7 +106,8 @@ void printDistance()
  */
 void connectToWifi() 
 {
-    auto isConnected = client.autoConnect("TestConnect", "password");
+    // TODO: пофиксить авто-коннект к точке доступа
+    auto isConnected = wifiClient.autoConnect("TestConnect", "password");
 
     if (!isConnected)
     {
@@ -118,12 +124,17 @@ void setup()
 {
     Serial.begin(115200);
 
-    printThread.setInterval(1000);
-    printThread.onRun([]() 
+    sendDataToServerThread.setInterval(1000);
+    sendDataToServerThread.onRun([]() 
     {
-        printAxis();
-        printSmokeValue();
-        printDistance();
+        DynamicJsonDocument document(1024);
+        fillBoardData(document);
+        fillSensorsData(document);
+
+        const char* json;
+        serializeJson(document, json);
+        printJsonToSerial(json);
+        sendJsonToServer(json);
     });
 
     while
