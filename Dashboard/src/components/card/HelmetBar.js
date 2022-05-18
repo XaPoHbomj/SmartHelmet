@@ -1,5 +1,6 @@
 import { Badge, Button, Space, Tooltip } from "antd";
 import { ThunderboltOutlined, CopyOutlined } from "@ant-design/icons";
+import { useEffect, useRef } from "react";
 
 const chargingIconStyle = {
   color: "orange"
@@ -17,6 +18,12 @@ const connectionStates = {
 };
 
 export default function HelmetBar(props) {
+  const identificatorNode = useRef(null)
+
+  useEffect(() => {
+    identificatorNode.current.parentNode.style.minWidth = '250px'
+  }, [identificatorNode])
+
   const view = props.isOnline
     ? connectionStates.online
     : connectionStates.offline;
@@ -26,7 +33,9 @@ export default function HelmetBar(props) {
       <Tooltip title={view.tooltip}>
         <Badge status={view.status} />
       </Tooltip>
-      {props.identificator ?? "Идентификатор не определен"}
+      <div ref={identificatorNode}>
+        {props.identificator ?? "Идентификатор не определен"}
+      </div>
       {props.identificator && (
         <Tooltip title="Скопировать в буфер обмена">
           <Button

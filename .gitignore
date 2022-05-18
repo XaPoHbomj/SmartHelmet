@@ -11,6 +11,7 @@ Board/.vscode/ipch
 ###################
 Dashboard/.DS_STORE
 Dashboard/node_modules
+Dashboard/package-lock.json
 Dashboard/scripts/flow/*/.flowconfig
 Dashboard/.flowconfig
 Dashboard/*~
