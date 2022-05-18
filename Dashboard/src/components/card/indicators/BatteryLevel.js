@@ -1,5 +1,5 @@
 import Indicator from "./Indicator";
-import { BatteryIcon } from "../../../icons/BatteryIcon";
+import { BatteryIcon } from "../../../extra/BatteryIcon";
 
 export default function BatteryLevel(props) {
   const batteryLevel = props.value ?? 0;
