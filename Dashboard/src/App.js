@@ -1,7 +1,7 @@
 import HelmetCard from "./components/card/HelmetCard";
 import "./styles.css";
 import "antd/dist/antd.css";
-import {Empty, message, notification, Space} from "antd";
+import {Empty, message, notification, Space, Result} from "antd";
 import {CloudOutlined} from "@ant-design/icons";
 import {Fragment, useState, useEffect} from "react";
 import ContentHeader from "./components/ContentHeader";
@@ -14,6 +14,7 @@ export default function App() {
   const [hubConnection, setHubConnection] = useState(null);
   const [helmets, setHelmets] = useState([]);
   const [isInLoading, showSkeleton] = useState(false);
+  const [connectionFailed, showConnectionFailedPage] = useState(false);
   const [isDashboardOpened, openDashboard] = useState(false);
 
   const onIdentificatorCopying = (identificator) => {
@@ -44,13 +45,7 @@ export default function App() {
       message: "Подключение к серверу успешно выполнено"
     });
   };
-
-  const onConnectionFailed = (error) => {
-    notification.error({
-      message: "Произошла ошибка при подключении к серверу"
-    });
-  };
-
+  
   const onEventReceived = (event) => {
     const helmet = {
       ...event,
@@ -60,36 +55,39 @@ export default function App() {
     }
     
     setHelmets((previousState) => {
-      const existingHelmetIndex = previousState.findIndex(x => x.identificator == helmet.identificator);
+      const existingHelmets = [...previousState]
+      const existingHelmetIndex = existingHelmets.findIndex(x => x.identificator === helmet.identificator);
 
       if (existingHelmetIndex > -1) {
-        previousState[existingHelmetIndex] = helmet;
+        existingHelmets[existingHelmetIndex] = helmet;
 
-        return previousState;
+        return existingHelmets;
       }
 
       return [
-        ...previousState,
+        ...existingHelmets,
         helmet
       ];
     });
 
     notification.info({
+      key: "receiving",
       message: "Данные обновлены",
-      description: helmet.identificator
-    });
-  };
-
-  const onEventReceivingFailed = (error) => {
-    notification.error({
-      message: "Произошла ошибка при получении данных"
+      description: `в ${new Date().toLocaleTimeString()}`
     });
   };
 
   useEffect(() => {
     hubConnection?.start().then(
-      onConnected, 
-      onConnectionFailed
+      onConnected,
+      (error) => {
+        showSkeleton(false);
+        showConnectionFailedPage(true)
+
+        notification.error({
+          message: "Произошла ошибка при первоначальном подключении к серверу. Пожалуйста, обновите страницу"
+        });
+      }
     );
   }, [hubConnection]);
 
@@ -113,10 +111,34 @@ export default function App() {
       .withAutomaticReconnect()
       .build();
 
+    hubEndpoint.onreconnected((connectionId) => {
+      showSkeleton(false);
+      
+      notification.success({
+        key: "reconnecting",
+        message: "Переподключение к серверу успешно выполнено",
+        description: connectionId
+      });
+    })
+    
+    hubEndpoint.onreconnecting((error) => {
+      showSkeleton(true);
+      
+      notification.warning({
+        key: "reconnecting",
+        message: "Выполняется переподключение",
+        duration: 0
+      });
+    })
+    
     hubEndpoint.on(
       "getUpdates", 
-      onEventReceived, 
-      onEventReceivingFailed
+      onEventReceived,
+      (error) => {
+        notification.error({
+          message: "Произошла ошибка при получении данных"
+        });
+      }
     );
 
     setHubConnection(hubEndpoint);
@@ -125,6 +147,14 @@ export default function App() {
   const renderOverview = () => {
     if (isInLoading) {
       return <HelmetCardSkeleton active={true} size="small"/>;
+    }
+    
+    if (connectionFailed) {
+      return <Result
+        status="500"
+        title="Сервер недоступен"
+        subTitle="Пожалуйста, перезагрузите страницу!"
+      />
     }
 
     if (helmets.length > 0) {

@@ -12,7 +12,7 @@ const skeletonIndicatorStyle = {
 export default function HelmetCardSkeleton(props) {
   const { active, size } = props;
   const indicators = [...Array(3).keys()];
-  const cards = [...Array(6).keys()];
+  const cards = [...Array(12).keys()];
 
   const actions = [
     <Skeleton.Button active={active} size={size} shape="round" />,
