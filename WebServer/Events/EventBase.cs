@@ -13,7 +13,7 @@ public abstract class EventBase
     /// <summary>
     /// Дата и время получения события
     /// </summary>
-    public DateTime DateTime { get; set; }
+    public DateTimeOffset DateTime { get; set; }
     
     /// <summary>
     /// Уровень заряда платы
