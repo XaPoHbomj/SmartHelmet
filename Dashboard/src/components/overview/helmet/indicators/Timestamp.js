@@ -6,7 +6,7 @@ export default function Timestamp(props) {
     <Indicator
       icon={<SyncOutlined />}
       value={props.value}
-      tooltip="Дата отправки данных на сервер"
+      tooltip="Дата получения данных сервером"
     />
   );
 }

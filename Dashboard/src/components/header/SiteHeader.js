@@ -1,6 +1,6 @@
 import { Divider, Space, Typography } from "antd";
 
-export default function ContentHeader(props) {
+export default function SiteHeader(props) {
   return (
     <Divider orientation="left">
       <Typography.Title level={3}>

@@ -1,186 +1,101 @@
-import HelmetCard from "./components/card/HelmetCard";
-import "./styles.css";
-import "antd/dist/antd.css";
-import {Empty, message, notification, Space, Result} from "antd";
-import {CloudOutlined} from "@ant-design/icons";
-import {Fragment, useState, useEffect} from "react";
-import ContentHeader from "./components/ContentHeader";
-import {remoteHelmets} from "./data/Helmets";
-import Dashboard from "./components/Dashboard";
-import HelmetCardSkeleton from "./components/card/skeletons/HelmetCardSkeleton";
-import {HubConnectionBuilder} from "@microsoft/signalr";
+import HubContext from "./components/signalr/HubContext";
+import SiteHeader from "./components/header/SiteHeader";
+import { CloudOutlined } from "@ant-design/icons";
+import HelmetOverview, { HelmetOverviewSkeleton } from "./components/overview/HelmetOverview";
+import React, { useState } from "react";
+import Helmet from "./components/overview/helmet/HelmetHeader";
+import SignalLevel from "./components/overview/helmet/indicators/SignalLevel";
+import BatteryLevel from "./components/overview/helmet/indicators/BatteryLevel";
+import Timestamp from "./components/overview/helmet/indicators/Timestamp";
+import {Card, notification} from "antd";
+import moment from "moment";
+import EmptyIndicator from "./components/overview/helmet/indicators/EmptyIndicator";
 
 export default function App() {
-  const [hubConnection, setHubConnection] = useState(null);
-  const [helmets, setHelmets] = useState([]);
-  const [isInLoading, showSkeleton] = useState(false);
-  const [connectionFailed, showConnectionFailedPage] = useState(false);
-  const [isDashboardOpened, openDashboard] = useState(false);
+  const [overviewSkeletonVisible, showOverviewSkeleton] = useState(true);
+  const [isDashboardOpen, showDashboard] = useState(false);
+  const [events, updateEvents] = useState([]);
 
-  const onIdentificatorCopying = (identificator) => {
-    navigator.clipboard.writeText(identificator).then(
-      () => message.success("Идентификатор успешно скопирован в буфер обмена"),
-      () => message.error("Не удалось скопировать идентификатор в буфер обмена")
+  const hubCallbacks = {
+    onStarted: () => {
+      showOverviewSkeleton(false);
+    },
+    onEventReceived: (event) => {
+      event.isOnline = true;
+      
+      if (isDashboardOpen) {
+        const timestamp = moment().format("DD.MM.yyyy г. в HH:mm:ss");
+
+        notification.info({
+          message: "Данные обновлены",
+          description: timestamp
+        });
+      }
+
+      updateEvents((previousState) => {
+        const existingEvents = [...previousState];
+        const elementIndex = existingEvents.findIndex(
+          (existingEvent) => existingEvent.identificator === event.identificator
+        );
+
+        if (elementIndex > -1) {
+          existingEvents[elementIndex] = event;
+          return existingEvents;
+        }
+
+        return [
+          ...existingEvents, 
+          event
+        ];
+      });
+    }
+  };
+
+  const onHelmetRemove = (identificator) => {
+    updateEvents(
+      events.filter(
+        (existingEvent) => existingEvent.identificator !== identificator
+      )
     );
   };
 
-  const onDashboardOpening = (helmet) => {
-    openDashboard(true);
+  const onDashboardOpen = (identificator) => {
+    showDashboard(true);
   };
 
-  const onDashboardClosed = () => {
-    openDashboard(false);
-  };
-
-  const onHelmetRemoving = (helmet) => {
-    setHelmets(
-      helmets.filter((x) => x.identificator !== helmet.identificator)
-    );
-  };
-
-  const onConnected = () => {
-    showSkeleton(false);
-
-    notification.success({
-      message: "Подключение к серверу успешно выполнено"
-    });
+  const onDashboardClose = () => {
+    showDashboard(false);
   };
   
-  const onEventReceived = (event) => {
-    const helmet = {
-      ...event,
-      identificator: event.boardIdentificator,
-      dateTime: new Date(event.dateTime).toLocaleTimeString(),
-      isOnline: true
-    }
-    
-    setHelmets((previousState) => {
-      const existingHelmets = [...previousState]
-      const existingHelmetIndex = existingHelmets.findIndex(x => x.identificator === helmet.identificator);
-
-      if (existingHelmetIndex > -1) {
-        existingHelmets[existingHelmetIndex] = helmet;
-
-        return existingHelmets;
-      }
-
-      return [
-        ...existingHelmets,
-        helmet
-      ];
-    });
-
-    notification.info({
-      key: "receiving",
-      message: "Данные обновлены",
-      description: `в ${new Date().toLocaleTimeString()}`
-    });
-  };
-
-  useEffect(() => {
-    hubConnection?.start().then(
-      onConnected,
-      (error) => {
-        showSkeleton(false);
-        showConnectionFailedPage(true)
-
-        notification.error({
-          message: "Произошла ошибка при первоначальном подключении к серверу. Пожалуйста, обновите страницу"
-        });
-      }
-    );
-  }, [hubConnection]);
-
-  const renderHelmetBar = (helmet) => (
-    <HelmetCard
-      key={helmet.identificator}
-      helmet={helmet}
-      onDashboardOpening={onDashboardOpening}
-      onIdentificatorCopying={onIdentificatorCopying}
-      onHelmetRemoving={onHelmetRemoving}
-    />
-  );
-
-  useEffect(() => {
-    showSkeleton(true);
-
-    const hubEndpointBuilder = new HubConnectionBuilder();
-
-    const hubEndpoint = hubEndpointBuilder
-      .withUrl("https://localhost:7217/board/")
-      .withAutomaticReconnect()
-      .build();
-
-    hubEndpoint.onreconnected((connectionId) => {
-      showSkeleton(false);
-      
-      notification.success({
-        key: "reconnecting",
-        message: "Переподключение к серверу успешно выполнено",
-        description: connectionId
-      });
-    })
-    
-    hubEndpoint.onreconnecting((error) => {
-      showSkeleton(true);
-      
-      notification.warning({
-        key: "reconnecting",
-        message: "Выполняется переподключение",
-        duration: 0
-      });
-    })
-    
-    hubEndpoint.on(
-      "getUpdates", 
-      onEventReceived,
-      (error) => {
-        notification.error({
-          message: "Произошла ошибка при получении данных"
-        });
-      }
-    );
-
-    setHubConnection(hubEndpoint);
-  }, []);
-
-  const renderOverview = () => {
-    if (isInLoading) {
-      return <HelmetCardSkeleton active={true} size="small"/>;
-    }
-    
-    if (connectionFailed) {
-      return <Result
-        status="500"
-        title="Сервер недоступен"
-        subTitle="Пожалуйста, перезагрузите страницу!"
-      />
-    }
-
-    if (helmets.length > 0) {
-      return (
-        <Space wrap size="middle">
-          {helmets.map(renderHelmetBar)}
-        </Space>
-      );
-    }
-
-    return (
-      <Empty
-        description="Устройства не найдены"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
-    );
-  };
-
   return (
-    <Fragment>
-      <ContentHeader icon={<CloudOutlined/>} header="SmartHelmet"/>
-      {renderOverview()}
-      <Dashboard
-        isDashboardOpened={isDashboardOpened}
-        onDashboardClosed={onDashboardClosed}
-      />
-    </Fragment>
+    <HubContext
+      endpoint="https://localhost:7217/board/"
+      target="getUpdates"
+      callbacks={hubCallbacks}
+    >
+      <SiteHeader header="SmartHelmet" icon={<CloudOutlined />} />
+      <HelmetOverview>
+        <Helmet identificator={1} isOnline={true}>
+        </Helmet>
+      </HelmetOverview>
+      {/*<HelmetOverview 
+          skeletonVisible={overviewSkeletonVisible} 
+          skeleton={<HelmetOverviewSkeleton helmetsCount={6} active={true} size="small" />}>
+        {events.map((event) => (
+          <Helmet
+            key={event.boardIdentificator}
+            identificator={event.boardIdentificator}
+            charging={event.charging}
+            isOnline={event.isOnline}
+            onHelmetRemove={onHelmetRemove}
+            onDashboardOpen={onDashboardOpen}
+          >
+            <SignalLevel value={event.signalLevel} />
+            <BatteryLevel value={event.batteryLevel} />
+            <Timestamp value={event.timestamp} />
+          </Helmet>
+        ))}
+      </HelmetOverview>*/}
+    </HubContext>
   );
 }
