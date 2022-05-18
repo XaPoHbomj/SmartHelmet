@@ -4,17 +4,20 @@
 #include "SmokeDetector/SmokeDetector.h"
 #include "Rangefinder/Rangefinder.h"
 #include <WiFiManager.h>
+#include <HTTPClient.h>
 #include "SD.h"
 #include "FS.h"
 #include "SPI.h"
 #include "ArduinoJson.h"
+#include "time.h"
 
 /* MAC-адрес платы */
 auto boardIdentificator = ESP.getEfuseMac();
 
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
-const char* endpoint = "https://localhost:47776"; // TODO: перенести в конфигурационный файл
+const char* endpoint = "https://localhost:47776/ReceiveSensorsData"; // TODO: перенести в конфигурационный файл
+const char* ntpServer = "pool.ntp.org";
 
 /* Поток вывода сообщений */
 auto sendDataToServerThread = Thread();
@@ -97,7 +100,14 @@ void printJsonToSerial(const char* json) {
 
 /* Отправляет JSON на сервер */
 void sendJsonToServer(const char* json) {
-    // TODO: Отправить JSON на сервер
+    // TODO: Добавить проверки на подключение к интернету (?) и на успешную отправку данных
+    HTTPClient httpClient;
+    httpClient.begin(endpoint);
+
+    httpClient.addHeader("Content-Type", "application/json");
+    auto responseCode = httpClient.POST(json);
+    
+    httpClient.end();
 }
 
 /*  
@@ -123,6 +133,11 @@ void connectToWifi()
 void setup() 
 {
     Serial.begin(115200);
+
+    // TODO: реализовать получение времени с платы
+    configTime(0, 0, ntpServer);
+    tm timeinfo;
+    getLocalTime(&timeinfo);
 
     sendDataToServerThread.setInterval(1000);
     sendDataToServerThread.onRun([]() 
