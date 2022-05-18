@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using WebServer.Events;
+using WebServer.Hubs;
 
 namespace WebServer.Controllers;
 
@@ -16,12 +18,19 @@ public class BoardController : ControllerBase
     private readonly ILogger<BoardController> _logger;
 
     /// <summary>
+    /// Контект для <see cref="BoardHub"/>
+    /// </summary>
+    private readonly IHubContext<BoardHub> _hubContext;
+
+    /// <summary>
     /// Инициализирует <see cref="BoardController"/>
     /// </summary>
     /// <param name="logger">Логгер</param>
-    public BoardController(ILogger<BoardController> logger)
+    /// <param name="hubContext">Контект для <see cref="BoardHub"/></param>
+    public BoardController(ILogger<BoardController> logger, IHubContext<BoardHub> hubContext)
     {
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -30,7 +39,7 @@ public class BoardController : ControllerBase
     /// <param name="event">Событие, содержащее значения сенсоров</param>
     [HttpPost]
     [Route("ReceiveSensorsData")]
-    public IActionResult OnSensorsDataChanged([FromBody] SensorsDataChangedEvent @event)
+    public async Task<IActionResult> OnSensorsDataChanged([FromBody] SensorsDataChangedEvent @event)
     {
         if (@event is null)
         {
@@ -51,7 +60,7 @@ public class BoardController : ControllerBase
             );
         }
 
-
+        await _hubContext.Clients.All.SendAsync("getUpdates", @event);
         
         return Ok();
     }
