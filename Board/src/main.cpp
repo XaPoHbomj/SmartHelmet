@@ -20,7 +20,7 @@ SDCard sdcard;
 
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
-const char* endpoint = "https://localhost:7217/ReceiveSensorsData"; // TODO: перенести в конфигурационный файл
+const char* endpoint = "https://localhost:7217/Board/ReceiveSensorsData"; // TODO: перенести в конфигурационный файл
 
 /* NTP клиент */
 WiFiUDP ntpUDP;
@@ -124,7 +124,7 @@ auto CheckFiles = Thread();
 /* TODO: вынести в отдельный класс JSONDocumentManager*/
 void fillBoardData(DynamicJsonDocument& document) {
     document["boardIdentificator"] = boardIdentificator;
-    document["dateTime"] = timeClient.getFormattedTime(); // TODO: добавить запись времени (Сделано)
+    document["dateTime"] = timeClient.getFormattedTime();
     document["batteryLevel"] = 100.0f; // TODO: добавить вывод заряда батареи
     document["signalLevel"] = wifiClient.getRSSIasQuality(
         WiFi.RSSI()
@@ -154,22 +154,19 @@ void printJsonToSerial(String& json) {
 /* Отправляет JSON на сервер */
 /* TODO: вынести в отдельный класс JSONDocumentManager*/
 bool sendJsonToServer(String& json) {
-    // TODO: Добавить проверки на подключение к интернету (?) и на успешную отправку данных (сделано)
     HTTPClient httpClient;
     auto res = httpClient.begin(endpoint);
 
     if (res) {
         httpClient.addHeader("Content-Type", "application/json");
         auto responseCode = httpClient.POST(json);
-    
+        httpClient.end();
         if (responseCode >= 200 && responseCode < 300) {
             Serial.println("POST Success");
-            httpClient.end();
             return true;
         }
         else {
             Serial.println("POST Fail");
-            httpClient.end();
             return false;
         }
         return true;
