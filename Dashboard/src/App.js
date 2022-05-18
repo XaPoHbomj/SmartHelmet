@@ -18,12 +18,8 @@ export default function App() {
 
   const onIdentificatorCopying = (identificator) => {
     navigator.clipboard.writeText(identificator).then(
-      () => {
-        message.success("Идентификатор успешно скопирован в буфер обмена");
-      },
-      () => {
-        message.error("Не удалось скопировать идентификатор в буфер обмена");
-      }
+      () => message.success("Идентификатор успешно скопирован в буфер обмена"),
+      () => message.error("Не удалось скопировать идентификатор в буфер обмена")
     );
   };
 
@@ -40,69 +36,61 @@ export default function App() {
       helmets.filter((x) => x.identificator !== helmet.identificator)
     );
   };
-  
-  const addHelmet = (helmet) => {
-    console.log(helmets)
-    setHelmets([
-      ...helmets,
-      helmet
-    ]);
-  }
 
-  useEffect(() => {
-    showSkeleton(true);
+  const onConnected = () => {
+    showSkeleton(false);
 
-    const hubEndpointBuilder = new HubConnectionBuilder();
+    notification.success({
+      message: "Подключение к серверу успешно выполнено"
+    });
+  };
 
-    const hubEndpoint = hubEndpointBuilder
-      .withUrl("https://localhost:7217/board/")
-      .withAutomaticReconnect()
-      .build();
+  const onConnectionFailed = (error) => {
+    notification.error({
+      message: "Произошла ошибка при подключении к серверу"
+    });
+  };
 
-    setHubConnection(hubEndpoint);
-  }, []);
-
-  useEffect(() => {
-    if (!!hubConnection) {
-      const onConnected = () => {
-        showSkeleton(false);
-
-        notification.success({
-          message: "Подключение к серверу успешно выполнено"
-        });
-
-        hubConnection.on(
-          "getUpdates",
-          (update) => {
-            const helmet = {
-              ...update,
-              identificator: update.boardIdentificator,
-              dateTime: new Date(update.dateTime).toLocaleTimeString(),
-              isOnline: true
-            }
-            
-            addHelmet(helmet)
-
-            notification.info({
-              message: "Данные обновлены"
-            });
-          },
-          (error) => {
-            notification.error({
-              message: "Произошла ошибка при получении данных"
-            });
-          }
-        );
-      }
-
-      const onConnectionFailed = (error) => {
-        notification.error({
-          message: "Произошла ошибка при подключении к серверу"
-        });
-      }
-
-      hubConnection.start().then(onConnected, onConnectionFailed);
+  const onEventReceived = (event) => {
+    const helmet = {
+      ...event,
+      identificator: event.boardIdentificator,
+      dateTime: new Date(event.dateTime).toLocaleTimeString(),
+      isOnline: true
     }
+    
+    setHelmets((previousState) => {
+      const existingHelmetIndex = previousState.findIndex(x => x.identificator == helmet.identificator);
+
+      if (existingHelmetIndex > -1) {
+        previousState[existingHelmetIndex] = helmet;
+
+        return previousState;
+      }
+
+      return [
+        ...previousState,
+        helmet
+      ];
+    });
+
+    notification.info({
+      message: "Данные обновлены",
+      description: helmet.identificator
+    });
+  };
+
+  const onEventReceivingFailed = (error) => {
+    notification.error({
+      message: "Произошла ошибка при получении данных"
+    });
+  };
+
+  useEffect(() => {
+    hubConnection?.start().then(
+      onConnected, 
+      onConnectionFailed
+    );
   }, [hubConnection]);
 
   const renderHelmetBar = (helmet) => (
@@ -114,6 +102,25 @@ export default function App() {
       onHelmetRemoving={onHelmetRemoving}
     />
   );
+
+  useEffect(() => {
+    showSkeleton(true);
+
+    const hubEndpointBuilder = new HubConnectionBuilder();
+
+    const hubEndpoint = hubEndpointBuilder
+      .withUrl("https://localhost:7217/board/")
+      .withAutomaticReconnect()
+      .build();
+
+    hubEndpoint.on(
+      "getUpdates", 
+      onEventReceived, 
+      onEventReceivingFailed
+    );
+
+    setHubConnection(hubEndpoint);
+  }, []);
 
   const renderOverview = () => {
     if (isInLoading) {
