@@ -26,14 +26,16 @@ export default function HelmetBar(props) {
       <Tooltip title={view.tooltip}>
         <Badge status={view.status} />
       </Tooltip>
-      {props.identificator}
-      <Tooltip title="Скопировать в буфер обмена">
-        <Button
-          type="text"
-          icon={<CopyOutlined />}
-          onClick={() => props.onIdentificatorCopying(props.identificator)}
-        />
-      </Tooltip>
+      {props.identificator ?? "Идентификатор не определен"}
+      {props.identificator && (
+        <Tooltip title="Скопировать в буфер обмена">
+          <Button
+            type="text"
+            icon={<CopyOutlined />}
+            onClick={() => props.onIdentificatorCopying(props.identificator)}
+          />
+        </Tooltip>
+      )}
       {props.charging && (
         <Tooltip title="Заряжается">
           <ThunderboltOutlined style={chargingIconStyle} />

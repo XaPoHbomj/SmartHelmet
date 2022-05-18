@@ -12,7 +12,7 @@ import Timestamp from "./indicators/Timestamp";
 import EmptyIndicator from "./indicators/EmptyIndicator";
 
 const cardStyle = {
-  width: "100%"
+  width: "max-content"
 };
 
 const warningIconStyle = {
