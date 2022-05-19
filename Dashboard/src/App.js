@@ -15,13 +15,33 @@ export default function App() {
   const [isDashboardOpen, showDashboard] = useState(false);
   const [events, updateEvents] = useState([]);
 
+  const handleEvent = (event) => {
+    updateEvents((previousState) => {
+      const existingEvents = [...previousState];
+      console.log(1, existingEvents)
+      const elementIndex = existingEvents.findIndex(
+        (existingEvent) => existingEvent.identificator === event.identificator
+      );
+
+      if (elementIndex > -1) {
+        existingEvents[elementIndex] = event;
+        console.log(2, existingEvents)
+        return existingEvents;
+      }
+
+      console.log(3, existingEvents)
+      return [
+        ...existingEvents,
+        event
+      ];
+    });
+  };
+  
   const hubCallbacks = {
     onStarted: () => {
       showOverviewSkeleton(false);
     },
     onEventReceived: (event) => {
-      event.isOnline = true;
-      
       if (isDashboardOpen) {
         const timestamp = moment().format("DD.MM.yyyy г. в HH:mm:ss");
 
@@ -31,34 +51,22 @@ export default function App() {
         });
       }
 
-      updateEvents((previousState) => {
-        const existingEvents = [...previousState];
-        const elementIndex = existingEvents.findIndex(
-          (existingEvent) => existingEvent.identificator === event.identificator
-        );
-
-        if (elementIndex > -1) {
-          existingEvents[elementIndex] = event;
-          return existingEvents;
-        }
-
-        return [
-          ...existingEvents, 
-          event
-        ];
+      handleEvent({
+        ...event,
+        isOnline: true
       });
     }
   };
 
-  const onHelmetRemove = (event) => {
+  const onHelmetRemove = (identificator) => {
     updateEvents(
       events.filter(
-        (existingEvent) => existingEvent.identificator !== event.identificator
+        (existingEvent) => existingEvent.identificator !== identificator
       )
     );
   };
 
-  const onDashboardOpen = (event) => {
+  const onDashboardOpen = (identificator) => {
     showDashboard(true);
   };
 
@@ -76,18 +84,13 @@ export default function App() {
       <HelmetOverview 
           skeletonVisible={overviewSkeletonVisible} 
           skeleton={<HelmetOverviewSkeleton helmetsCount={6} active={true} size="small" />}>
-        <Helmet isOnline={true}>
-          <SignalLevel value={2} />
-        </Helmet>
         {events.map((event) => (
           <Helmet
             key={event.boardIdentificator}
-            data={{
-              identificator: event.boardIdentificator,
-              isOnline: event.isOnline,
-              charging: event.charging,
-              timestamp: event.dateTime
-            }}
+            identificator={event.boardIdentificator}
+            isOnline={event.isOnline}
+            charging={event.charging}
+            timestamp={event.dateTime}
             onHelmetRemove={onHelmetRemove}
             onDashboardOpen={onDashboardOpen}
           >

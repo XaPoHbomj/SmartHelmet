@@ -24,7 +24,7 @@ export default function HelmetHeader(props) {
     identificatorNode.current.parentNode.style.minWidth = '250px';
   }, [identificatorNode]);
 
-  const view = props.data.isOnline
+  const view = props.isOnline
     ? connectionStates.online
     : connectionStates.offline;
 
@@ -34,6 +34,8 @@ export default function HelmetHeader(props) {
       () => message.error("Не удалось скопировать идентификатор в буфер обмена")
     );
   };
+  
+  const onClick = () => onIdentificatorCopying(props.identificator);
 
   return (
     <Space>
@@ -41,18 +43,18 @@ export default function HelmetHeader(props) {
         <Badge status={view.status} />
       </Tooltip>
       <div ref={identificatorNode}>
-        {props.data.identificator ?? "Идентификатор не определен"}
+        {props.identificator ?? "Идентификатор не определен"}
       </div>
-      {props.data.identificator && (
+      {props.identificator && (
         <Tooltip title="Скопировать в буфер обмена">
           <Button
             type="text"
             icon={<CopyOutlined />}
-            onClick={() => onIdentificatorCopying(props.data.identificator)}
+            onClick={onClick}
           />
         </Tooltip>
       )}
-      {props.data.charging && (
+      {props.charging && (
         <Tooltip title="Заряжается">
           <ThunderboltOutlined style={baseChargingIconStyle} />
         </Tooltip>
