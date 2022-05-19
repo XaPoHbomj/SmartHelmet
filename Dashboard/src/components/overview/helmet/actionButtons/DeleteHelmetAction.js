@@ -12,10 +12,12 @@ export default function DeleteHelmetAction(props) {
       okText="Удалить"
       cancelText="Отмена"
       icon={<QuestionCircleOutlined style={baseActionStyle} />}
-      onConfirm={() => props.onClick(props.identificator)}
+      onConfirm={() => props.onExecute(props.data)}
     >
       <Tooltip title="Удалить" placement="bottom">
-        <DeleteOutlined key="removeHelmet" style={baseActionStyle} />
+        <DeleteOutlined 
+          key="removeHelmet"
+          style={baseActionStyle} />
       </Tooltip>
     </Popconfirm>
   );

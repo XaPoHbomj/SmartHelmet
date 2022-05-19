@@ -3,13 +3,12 @@ import SiteHeader from "./components/header/SiteHeader";
 import { CloudOutlined } from "@ant-design/icons";
 import HelmetOverview, { HelmetOverviewSkeleton } from "./components/overview/HelmetOverview";
 import React, { useState } from "react";
-import Helmet from "./components/overview/helmet/HelmetHeader";
+import Helmet from "./components/overview/helmet/Helmet";
 import SignalLevel from "./components/overview/helmet/indicators/SignalLevel";
 import BatteryLevel from "./components/overview/helmet/indicators/BatteryLevel";
 import Timestamp from "./components/overview/helmet/indicators/Timestamp";
-import {Card, notification} from "antd";
+import { notification } from "antd";
 import moment from "moment";
-import EmptyIndicator from "./components/overview/helmet/indicators/EmptyIndicator";
 
 export default function App() {
   const [overviewSkeletonVisible, showOverviewSkeleton] = useState(true);
@@ -51,15 +50,15 @@ export default function App() {
     }
   };
 
-  const onHelmetRemove = (identificator) => {
+  const onHelmetRemove = (event) => {
     updateEvents(
       events.filter(
-        (existingEvent) => existingEvent.identificator !== identificator
+        (existingEvent) => existingEvent.identificator !== event.identificator
       )
     );
   };
 
-  const onDashboardOpen = (identificator) => {
+  const onDashboardOpen = (event) => {
     showDashboard(true);
   };
 
@@ -74,28 +73,30 @@ export default function App() {
       callbacks={hubCallbacks}
     >
       <SiteHeader header="SmartHelmet" icon={<CloudOutlined />} />
-      <HelmetOverview>
-        <Helmet identificator={1} isOnline={true}>
-        </Helmet>
-      </HelmetOverview>
-      {/*<HelmetOverview 
+      <HelmetOverview 
           skeletonVisible={overviewSkeletonVisible} 
           skeleton={<HelmetOverviewSkeleton helmetsCount={6} active={true} size="small" />}>
+        <Helmet isOnline={true}>
+          <SignalLevel value={2} />
+        </Helmet>
         {events.map((event) => (
           <Helmet
             key={event.boardIdentificator}
-            identificator={event.boardIdentificator}
-            charging={event.charging}
-            isOnline={event.isOnline}
+            data={{
+              identificator: event.boardIdentificator,
+              isOnline: event.isOnline,
+              charging: event.charging,
+              timestamp: event.dateTime
+            }}
             onHelmetRemove={onHelmetRemove}
             onDashboardOpen={onDashboardOpen}
           >
             <SignalLevel value={event.signalLevel} />
             <BatteryLevel value={event.batteryLevel} />
-            <Timestamp value={event.timestamp} />
+            <Timestamp value={moment(event.dateTime).format("HH:mm:ss")} />
           </Helmet>
         ))}
-      </HelmetOverview>*/}
+      </HelmetOverview>
     </HubContext>
   );
 }

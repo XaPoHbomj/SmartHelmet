@@ -5,8 +5,8 @@ export default function HelmetOverview(props) {
   if (props.skeletonVisible && props.skeleton) {
     return props.skeleton
   }
-
-  if (props.children && props.children.length > 0) {
+  
+  if (props.children) {
     return (
       <Space wrap size="middle">
         {props.children}

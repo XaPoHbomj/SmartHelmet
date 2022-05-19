@@ -16,28 +16,23 @@ const baseHelmetStyle = {
 export default function Helmet(props) {
   const deleteHelmetAction = (
     <DeleteHelmetAction
-      identificator={props.identificator}
-      onClick={props.onHelmetRemove}
+      data={props.data}
+      onExecute={props.onHelmetRemove}
     />
   );
 
   const openDashboardAction = (
     <OpenDashboardAction
-      identificator={props.identificator}
-      onClick={props.onDashboardOpen}
+      data={props.data}
+      onExecute={props.onDashboardOpen}
     />
   );
 
   const header = (
-    <HelmetHeader
-      identificator={props.identificator}
-      isOnline={props.isOnline}
-      charging={props.charging}
-    />
+    <HelmetHeader data={props.data} />
   );
   
-  if (props.isOnline && props.children && props.children.length > 0) {
-    console.log('such')
+  if (props.data.isOnline && props.children) {
     return (
       <Card
         actions={[openDashboardAction, deleteHelmetAction]}
@@ -49,7 +44,7 @@ export default function Helmet(props) {
       </Card>
     );
   }
-
+  
   return (
     <Card actions={[deleteHelmetAction]} title={header}>
       <Card.Grid style={baseRootIndicatorStyle} />

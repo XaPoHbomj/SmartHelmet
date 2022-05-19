@@ -6,7 +6,7 @@ export default function OpenDashboardAction(props) {
     <Tooltip title="Статистика" placement="bottom">
       <EllipsisOutlined
         key="openDashboard"
-        onClick={() => props.onClick(props.identificator)}
+        onClick={() => props.onExecute && props.onExecute(props.data)}
       />
     </Tooltip>
   );
