@@ -7,15 +7,13 @@ export default function HubListener(props) {
   const [connection, setConnection] = useState();
 
   const onStarted = () => {
-    setTimeout(() => {
-      notification.success({
-        key: "connecting",
-        message: "Подключение к серверу успешно выполнено",
-        description: connection.connectionId
-      });
+    notification.success({
+      key: "connecting",
+      message: "Подключение к серверу успешно выполнено",
+      description: connection.connectionId
+    });
 
-      props.callbacks.onStarted && props.callbacks.onStarted();
-    }, 5000)
+    props.callbacks.onStarted && props.callbacks.onStarted();
   };
 
   const onStartFailed = (error) => {
