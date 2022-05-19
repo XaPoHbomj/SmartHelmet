@@ -3,17 +3,19 @@ import { notification } from "antd";
 import moment from "moment";
 import { Fragment, useEffect, useState } from "react";
 
-export default function HubContext(props) {
+export default function HubListener(props) {
   const [connection, setConnection] = useState();
 
   const onStarted = () => {
-    notification.success({
-      key: "connecting",
-      message: "Подключение к серверу успешно выполнено",
-      description: connection.connectionId
-    });
+    setTimeout(() => {
+      notification.success({
+        key: "connecting",
+        message: "Подключение к серверу успешно выполнено",
+        description: connection.connectionId
+      });
 
-    props.callbacks.onStarted && props.callbacks.onStarted();
+      props.callbacks.onStarted && props.callbacks.onStarted();
+    }, 5000)
   };
 
   const onStartFailed = (error) => {
@@ -94,6 +96,4 @@ export default function HubContext(props) {
   
   useEffect(initializeConnection, []);
   useEffect(startConnection, [connection]);
-
-  return props.children;
 }

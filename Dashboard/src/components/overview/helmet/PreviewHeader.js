@@ -17,7 +17,7 @@ const connectionStates = {
   }
 };
 
-export default function HelmetHeader(props) {
+export default function PreviewHeader(props) {
   const identificatorNode = useRef();
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function HelmetHeader(props) {
   );
 }
 
-export function HelmetHeaderSkeleton(props) {
+export function PreviewHeaderSkeleton(props) {
   return (
     <Space>
       <Skeleton.Avatar {...props} />

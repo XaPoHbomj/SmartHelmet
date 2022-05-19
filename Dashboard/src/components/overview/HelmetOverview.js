@@ -1,39 +1,86 @@
 import { Empty, Space } from "antd";
-import { HelmetSkeleton } from "./helmet/Helmet";
+import { HelmetPreviewSkeleton } from "./helmet/HelmetPreview";
+import RcQueueAnim from "rc-queue-anim";
+import React, { Fragment } from "react";
+
+const SpaceRef = React.forwardRef((props, ref) => {
+  return (
+    <Space ref={ref} wrap size="middle">
+      {props.children}
+    </Space>
+  );
+});
 
 export default function HelmetOverview(props) {
-  if (props.skeletonVisible && props.skeleton) {
-    return props.skeleton
-  }
-  
-  if (props.children && props.children.length > 0) {
+  const canShowSkeleton = props.showSkeleton && props.skeletonSettings;
+  const isEmpty = !props.children || props.children.length === 0;
+
+  const renderEmpty = () => {
+    if (!isEmpty || canShowSkeleton) {
+      return null;
+    }
+
     return (
-      <Space wrap size="middle">
-        {props.children}
-      </Space>
+      <div key="emptyOverview">
+        <Empty
+          description="Каски не найдены"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
+      </div>
     );
   }
 
+  const renderComplete = () => {
+    if (canShowSkeleton) {
+      return (
+        <div key="skeleton">
+          {props.skeleton ?? <HelmetOverviewSkeleton {...props.skeletonSettings} />}
+        </div>
+      );
+    }
+
+    return props.children.map(
+      (element) => (
+        <div key={element.key}>
+          {element}
+        </div>
+      )
+    )
+  }
+
   return (
-    <Empty
-      description="Каски не найдены"
-      image={Empty.PRESENTED_IMAGE_SIMPLE}
-    />
+    <Fragment>
+      <RcQueueAnim
+        type={["top"]}
+        leaveReverse
+      >
+        {renderEmpty()}
+      </RcQueueAnim>
+      <RcQueueAnim
+        component={SpaceRef}
+        type={["bottom"]}
+        leaveReverse
+      >
+        {renderComplete()}
+      </RcQueueAnim>
+    </Fragment>
   );
 }
 
 export function HelmetOverviewSkeleton(props) {
-  const helmets = [...Array(props.helmetsCount).keys()];
+  const helmets = [
+    ...Array(props.helmetsCount).keys()
+  ];
 
   return (
-      <HelmetOverview>
-        {helmets.map((helmetIndex) => (
-            <HelmetSkeleton
-                key={helmetIndex}
-                active={props.active}
-                size={props.size}
-            />
-        ))}
-      </HelmetOverview>
+    <HelmetOverview>
+      {helmets.map((helmetIndex) => (
+        <HelmetPreviewSkeleton
+          key={helmetIndex}
+          active={props.active}
+          size={props.size}
+        />
+      ))}
+    </HelmetOverview>
   );
 }

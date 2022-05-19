@@ -3,7 +3,7 @@ import { IndicatorSkeleton } from "./indicators/Indicator";
 import DeleteHelmetAction from "./actionButtons/DeleteHelmetAction";
 import OpenDashboardAction from "./actionButtons/OpenDashboardAction";
 import EmptyIndicator from "./indicators/EmptyIndicator";
-import HelmetHeader, { HelmetHeaderSkeleton } from "./HelmetHeader";
+import PreviewHeader, { PreviewHeaderSkeleton } from "./PreviewHeader";
 
 const baseRootIndicatorStyle = {
   display: "none"
@@ -13,7 +13,7 @@ const baseHelmetStyle = {
   width: "max-content"
 };
 
-export default function Helmet(props) {
+export default function HelmetPreview(props) {
   const deleteHelmetAction = (
     <DeleteHelmetAction
       identificator={props.identificator}
@@ -29,7 +29,7 @@ export default function Helmet(props) {
   );
 
   const header = (
-    <HelmetHeader
+    <PreviewHeader
       identificator={props.identificator}
       isOnline={props.isOnline}
       charging={props.charging}
@@ -57,13 +57,13 @@ export default function Helmet(props) {
   );
 }
 
-export function HelmetSkeleton(props) {
+export function HelmetPreviewSkeleton(props) {
   const actions = [
     <Skeleton.Button {...props} shape="round" />,
     <Skeleton.Button {...props} shape="round" />
   ];
 
-  const header = <HelmetHeaderSkeleton {...props} />;
+  const header = <PreviewHeaderSkeleton {...props} />;
 
   return (
     <Card actions={actions} title={header} style={baseHelmetStyle}>
