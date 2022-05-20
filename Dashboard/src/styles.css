@@ -21,4 +21,12 @@ body {
 
 .ant-btn {
   border-radius: 0.42rem !important;
-} 
+}
+
+.ant-modal-header {
+  border-radius: 0.43em 0.43em 0 0;
+}
+
+.ant-modal-content {
+  border-radius: 0.43em;
+}

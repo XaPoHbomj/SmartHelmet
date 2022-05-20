@@ -52,7 +52,6 @@ export default function App() {
 
       handleEvent({
         ...event,
-        charging: true,
         isOnline: true
       });
     }

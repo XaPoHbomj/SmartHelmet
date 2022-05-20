@@ -78,7 +78,8 @@ bool trySetupSecureDigitalCard()
 }
 
 /* Вспомогательные процедуры для работы с файловой системой */
-void createDir(fs::FS &fs, const char * path) {
+void createDir(fs::FS &fs, const char * path) 
+{
   Serial.printf("Creating Dir: %s\n", path);
   if(fs.mkdir(path)){
     Serial.println("Dir created");
@@ -87,7 +88,8 @@ void createDir(fs::FS &fs, const char * path) {
   }
 }
 
-void writeFile(fs::FS &fs, const char * path, const char * message) {
+void writeFile(fs::FS &fs, const char * path, const char * message) 
+{
   Serial.printf("Writing file: %s\n", path);
 
   File file = fs.open(path, FILE_WRITE);
@@ -103,7 +105,8 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
   file.close();
 }
 
-void deleteFile(fs::FS &fs, const char * path) {
+void deleteFile(fs::FS &fs, const char * path) 
+{
   Serial.printf("Deleting file: %s\n", path);
   if(fs.remove(path)){
     Serial.println("File deleted");
@@ -112,7 +115,8 @@ void deleteFile(fs::FS &fs, const char * path) {
   }
 }
 
-void printJsonToFile(String &json) {
+void printJsonToFile(String &json) 
+{
     String path = "/DATA/" + timeClient.getFormattedTime() + ".txt";
     writeFile(SD, path.c_str(), json.c_str());
 }
@@ -121,8 +125,9 @@ void printJsonToFile(String &json) {
 auto CheckFiles = Thread();
 
 /* Заполняет указанный DynamicJsonDocument данными о плате */
-/* TODO: вынести в отдельный класс JSONDocumentManager*/
-void fillBoardData(DynamicJsonDocument& document) {
+/* TODO: вынести в отдельный класс JSONDocumentManager */
+void fillBoardData(DynamicJsonDocument& document) 
+{
     document["boardIdentificator"] = boardIdentificator;
     document["dateTime"] = timeClient.getFormattedTime();
     document["batteryLevel"] = 100.0f; // TODO: добавить вывод заряда батареи
@@ -133,7 +138,8 @@ void fillBoardData(DynamicJsonDocument& document) {
 
 /* Заполняет указанный DynamicJsonDocument данными с датчиков */
 /* TODO: вынести в отдельный класс JSONDocumentManager*/
-void fillSensorsData(DynamicJsonDocument& document) {
+void fillSensorsData(DynamicJsonDocument& document) 
+{
     auto gyroscopeValues = document.createNestedObject("gyroscope");
     auto axis = gyroscope.getAxis();
     gyroscopeValues["x"] = axis.getX();
@@ -147,34 +153,16 @@ void fillSensorsData(DynamicJsonDocument& document) {
 
 /* Выводит указанный JSON в Serial */
 /* TODO: вынести в отдельный класс JSONDocumentManager*/
-void printJsonToSerial(String& json) {
+void printJsonToSerial(String& json) 
+{
     Serial.printf("Сформировано: %s\n", json);
 }
 
 /* Отправляет JSON на сервер */
 /* TODO: вынести в отдельный класс JSONDocumentManager*/
-bool sendJsonToServer(String& json) {
-    HTTPClient httpClient;
-    auto res = httpClient.begin(endpoint);
-
-    if (res) {
-        httpClient.addHeader("Content-Type", "application/json");
-        auto responseCode = httpClient.POST(json);
-        httpClient.end();
-        if (responseCode >= 200 && responseCode < 300) {
-            Serial.println("POST Success");
-            return true;
-        }
-        else {
-            Serial.println("POST Fail");
-            return false;
-        }
-        return true;
-    }
-    else {
-        Serial.println("Fail to connect to HTTP");
-        return false;
-    }
+bool sendJsonToServer(String& json) 
+{
+    // call Api.h
 }
 
 /*  
@@ -205,8 +193,6 @@ void setup()
     // TODO: реализовать получение времени с платы (Сделано)
     timeClient.setTimeOffset(18000);
     timeClient.begin();
-
-    
 
     sendDataToServerThread.setInterval(1000);
     sendDataToServerThread.onRun([]() 

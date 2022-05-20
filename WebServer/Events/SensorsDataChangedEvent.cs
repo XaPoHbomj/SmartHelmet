@@ -25,7 +25,7 @@ public class SensorsDataChangedEvent : EventBase
     /// <summary>
     /// По датчику расстояния определяет снята ли каска
     /// </summary>
-    public bool IsDismounted => Distance < 5.0f;
+    public bool IsDismounted => Distance > 5.0f;
     
     /// <summary>
     /// По датчику дыма определяет высокий ли уровень задымления вокруг платы

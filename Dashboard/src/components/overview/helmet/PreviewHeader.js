@@ -49,63 +49,53 @@ export default function PreviewHeader(props) {
 
   const onClick = () => onIdentificatorCopying(props.identificator);
 
-  const renderChargingIcon = () => {
-    if (!props.charging) {
-      return null;
+  const renderIcons = () => {
+    const icons = [];
+
+    if (props.charging) {
+      icons.push(
+        <div key="chargingIcon">
+          <Tooltip title="Заряжается">
+            <ThunderboltOutlined style={baseOrangeIconStyle}/>
+          </Tooltip>
+        </div>
+      );
     }
 
-    return (
-      <div key="chargingIcon">
-        <Tooltip title="Заряжается">
-          <ThunderboltOutlined style={baseOrangeIconStyle}/>
-        </Tooltip>
-      </div>
-    );
-  }
-
-  const renderDismountedIcon = () => {
-    if (!props.isDismounted) {
-      return null;
+    if (props.isDismounted) {
+      icons.push(
+        <div key="dismountedIcon">
+          <Tooltip title="Сотрудник снял каску">
+            <WarningOutlined style={baseOrangeIconStyle}/>
+          </Tooltip>
+        </div>
+      );
     }
 
-    return (
-      <div key="dismountedIcon">
-        <Tooltip title="Сотрудник снял каску">
-          <WarningOutlined style={baseOrangeIconStyle}/>
-        </Tooltip>
-      </div>
-    );
-  }
-
-  const renderFellOffIcon = () => {
-    if (!props.isFellOff) {
-      return null;
+    if (props.isFellOff) {
+      icons.push(
+        <div key="fellOffIcon">
+          <Tooltip title="Зафиксировано падение каски">
+            <div>
+              <FallingIcon style={baseRedIconStyle}/>
+            </div>
+          </Tooltip>
+        </div>
+      );
     }
 
-    return (
-      <div key="fellOffIcon">
-        <Tooltip title="Зафиксировано падение каски">
-          <div>
-            <FallingIcon style={baseRedIconStyle}/>
-          </div>
-        </Tooltip>
-      </div>
-    );
-  }
-
-  const renderHighSmokeLevelIcon = () => {
-    if (!props.isHighSmokeLevel) {
-      return null;
+    if (props.isHighSmokeLevel) {
+      icons.push(
+        <div key="highSmokeLevelIcon">
+          <Tooltip title="Очень высокие показатели датчика дыма">
+            <AlertOutlined style={baseRedIconStyle}/>
+          </Tooltip>
+        </div>
+      );
     }
 
-    return (
-      <div key="highSmokeLevelIcon">
-        <Tooltip title="Очень высокие показатели датчика дыма">
-          <AlertOutlined style={baseRedIconStyle}/>
-        </Tooltip>
-      </div>
-    );
-  }
+    return icons;
+  };
 
   return (
     <Fragment>
@@ -129,11 +119,9 @@ export default function PreviewHeader(props) {
       <RcQueueAnim
         component={SpaceRef}
         type={["right"]}
+        leaveReverse
       >
-        {renderChargingIcon()}
-        {renderDismountedIcon()}
-        {renderFellOffIcon()}
-        {renderHighSmokeLevelIcon()}
+        {renderIcons()}
       </RcQueueAnim>
     </Fragment>
   );
