@@ -14,22 +14,23 @@ import Dashboard from "./components/dashboard/Dashboard";
 export default function App() {
   const [canShowOverviewSkeleton, showOverviewSkeleton] = useState(true);
   const [isDashboardOpen, showDashboard] = useState(false);
-  const [events, updateEvents] = useState([]);
+  const [dashboardTarget, setDashboardTarget] = useState({});
+  const [helmets, updateHelmets] = useState([]);
 
   const handleEvent = (event) => {
-    updateEvents((previousState) => {
-      const existingEvents = [...previousState];
-      const elementIndex = existingEvents.findIndex(
-        (existingEvent) => existingEvent.boardIdentificator === event.boardIdentificator
+    updateHelmets((previousState) => {
+      const existingHelmets = [...previousState];
+      const elementIndex = existingHelmets.findIndex(
+        (existingHelmet) => existingHelmet.boardIdentificator === event.boardIdentificator
       );
 
       if (elementIndex > -1) {
-        existingEvents[elementIndex] = event;
-        return existingEvents;
+        existingHelmets[elementIndex] = event;
+        return existingHelmets;
       }
 
       return [
-        ...existingEvents,
+        ...existingHelmets,
         event
       ];
     });
@@ -51,20 +52,26 @@ export default function App() {
 
       handleEvent({
         ...event,
+        charging: true,
         isOnline: true
       });
     }
   };
 
   const onHelmetRemove = (identificator) => {
-    updateEvents(
-      events.filter(
-        (existingEvent) => existingEvent.boardIdentificator !== identificator
+    updateHelmets(
+      helmets.filter(
+        (existingHelmet) => existingHelmet.boardIdentificator !== identificator
       )
     );
   };
 
   const onDashboardOpen = (identificator) => {
+    const helmet = helmets.find(
+      (existingHelmet) => existingHelmet.boardIdentificator === identificator
+    );
+    
+    setDashboardTarget(helmet);
     showDashboard(true);
   };
 
@@ -91,22 +98,26 @@ export default function App() {
           size: "small"
         }}
       >
-        {events.map((event) => (
+        {helmets.map((helmet) => (
           <HelmetPreview
-            key={event.boardIdentificator}
-            identificator={event.boardIdentificator}
-            isOnline={event.isOnline}
-            charging={event.charging}
+            key={helmet.boardIdentificator}
+            identificator={helmet.boardIdentificator}
+            isOnline={helmet.isOnline}
+            charging={helmet.charging}
+            isDismounted={helmet.isDismounted}
+            isFellOff={helmet.isFellOff}
+            isHighSmokeLevel={helmet.isHighSmokeLevel}
             onHelmetRemove={onHelmetRemove}
             onDashboardOpen={onDashboardOpen}
           >
-            <SignalLevel value={event.signalLevel}/>
-            <BatteryLevel value={event.batteryLevel}/>
-            <Timestamp value={moment(event.dateTime).format("HH:mm:ss")}/>
+            <SignalLevel value={helmet.signalLevel}/>
+            <BatteryLevel value={helmet.batteryLevel}/>
+            <Timestamp value={moment(helmet.dateTime).format("HH:mm:ss")}/>
           </HelmetPreview>
         ))}
       </HelmetOverview>
       <Dashboard
+        target={dashboardTarget}
         isOpened={isDashboardOpen}
         onClose={onDashboardClose}  
       />

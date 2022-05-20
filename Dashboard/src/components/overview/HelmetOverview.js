@@ -1,15 +1,8 @@
 import { Empty, Space } from "antd";
 import { HelmetPreviewSkeleton } from "./helmet/HelmetPreview";
 import RcQueueAnim from "rc-queue-anim";
+import SpaceRef from "./../helpers/SpaceRef"
 import React, { Fragment } from "react";
-
-const SpaceRef = React.forwardRef((props, ref) => {
-  return (
-    <Space ref={ref} wrap size="middle">
-      {props.children}
-    </Space>
-  );
-});
 
 export default function HelmetOverview(props) {
   const canShowSkeleton = props.showSkeleton && props.skeletonSettings;
@@ -58,6 +51,10 @@ export default function HelmetOverview(props) {
       </RcQueueAnim>
       <RcQueueAnim
         component={SpaceRef}
+        componentProps={{
+          wrap: true, 
+          size:"middle"
+        }}
         type={["bottom"]}
         leaveReverse
       >

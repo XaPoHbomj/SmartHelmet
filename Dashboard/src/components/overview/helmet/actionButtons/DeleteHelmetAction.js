@@ -2,7 +2,7 @@ import { Popconfirm, Tooltip } from "antd";
 import { QuestionCircleOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const baseActionStyle = {
-  color: "#FF4500"
+  color: "rgb(255, 89, 94)"
 };
 
 export default function DeleteHelmetAction(props) {

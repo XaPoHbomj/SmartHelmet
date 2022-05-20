@@ -6,3 +6,19 @@ body {
   font-family: sans-serif;
   text-align: center;
 }
+
+.ant-card {
+  border-radius: 0.42rem;
+}
+
+.ant-card-head {
+  border-radius: 0.42rem 0.42rem 0 0;
+}
+
+.ant-card-actions {
+  border-radius: 0 0 0.42rem 0.42rem;
+}
+
+.ant-btn {
+  border-radius: 0.42rem !important;
+} 

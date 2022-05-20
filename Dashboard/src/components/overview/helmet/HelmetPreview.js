@@ -33,6 +33,9 @@ export default function HelmetPreview(props) {
       identificator={props.identificator}
       isOnline={props.isOnline}
       charging={props.charging}
+      isDismounted={props.isDismounted}
+      isFellOff={props.isFellOff}
+      isHighSmokeLevel={props.isHighSmokeLevel}
     />
   );
   
