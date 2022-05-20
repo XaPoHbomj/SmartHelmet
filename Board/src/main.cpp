@@ -12,117 +12,37 @@
 #include "NTPClient.h"
 #include "WiFiUdp.h"
 #include "SDCard/SDCard.h"
+#include "Api/Api.h"
 
 /* MAC-адрес платы */
 auto boardIdentificator = ESP.getEfuseMac();
 
-SDCard sdcard;
+/* SD-карта */
+auto sdСard = SDCard(SD);
+
+/* Api клиент */
+auto api = Api("https://localhost:7217/Board/");
 
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
-const char* endpoint = "https://localhost:7217/Board/ReceiveSensorsData"; // TODO: перенести в конфигурационный файл
 
 /* NTP клиент */
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
-/* Поток вывода сообщений */
+/* Поток записи данных в файловую систему */
+auto writeDataToFileSystemThread = Thread();
+
+/* 
+    Поток отправки содержимого на сервер с предварительной проверкой наличия файлов в директории /DATA/. 
+    Если имеются, то отправляет содержимое на сервер. 
+*/
 auto sendDataToServerThread = Thread();
 
 /* Датчики */
 auto gyroscope = Gyroscope();
 auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
-
-/* Пытается инициализировать SD карту и определяет ее доступность */
-bool trySetupSecureDigitalCard() 
-{
-    if (!SD.begin())
-    {
-        Serial.println("SD Card mount failed");
-
-        return false;
-    }
-
-    auto cardType = SD.cardType();
-
-    if (cardType == CARD_NONE || cardType == CARD_UNKNOWN)
-    {
-        Serial.println("SD Card is missing");
-
-        return false;
-    }
-
-    Serial.printf("SD Card Type: %d\n", cardType);
-    auto mibs = 1024 * 1024;
-
-    Serial.printf
-    (
-        "SD Card size: %llu MiB\n", 
-        SD.cardSize() / mibs
-    );
-
-    Serial.printf
-    (
-        "Total space: %llu MiB\n", 
-        SD.totalBytes() / mibs
-    );
-
-    Serial.printf
-    (
-        "Used space: %llu MiB\n", 
-        SD.usedBytes() / mibs
-    );
-
-    return true;
-}
-
-/* Вспомогательные процедуры для работы с файловой системой */
-void createDir(fs::FS &fs, const char * path) 
-{
-  Serial.printf("Creating Dir: %s\n", path);
-  if(fs.mkdir(path)){
-    Serial.println("Dir created");
-  } else {
-    Serial.println("mkdir failed");
-  }
-}
-
-void writeFile(fs::FS &fs, const char * path, const char * message) 
-{
-  Serial.printf("Writing file: %s\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
-  if(!file){
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if(file.print(message)){
-    Serial.println("File written");
-  } else {
-    Serial.println("Write failed");
-  }
-  file.close();
-}
-
-void deleteFile(fs::FS &fs, const char * path) 
-{
-  Serial.printf("Deleting file: %s\n", path);
-  if(fs.remove(path)){
-    Serial.println("File deleted");
-  } else {
-    Serial.println("Delete failed");
-  }
-}
-
-void printJsonToFile(String &json) 
-{
-    String path = "/DATA/" + timeClient.getFormattedTime() + ".txt";
-    writeFile(SD, path.c_str(), json.c_str());
-}
-
-/* Проверяет наличие файлов в директории /DATA/. Если имеются, то отправляет содердимое на сервер. */
-auto CheckFiles = Thread();
 
 /* Заполняет указанный DynamicJsonDocument данными о плате */
 /* TODO: вынести в отдельный класс JSONDocumentManager */
@@ -158,13 +78,6 @@ void printJsonToSerial(String& json)
     Serial.printf("Сформировано: %s\n", json);
 }
 
-/* Отправляет JSON на сервер */
-/* TODO: вынести в отдельный класс JSONDocumentManager*/
-bool sendJsonToServer(String& json) 
-{
-    // call Api.h
-}
-
 /*  
     Подключает Wi-Fi клиент к точке доступа.
     В случае, если пользователь не подключился, создает собственную точку доступа и ожидает
@@ -197,46 +110,47 @@ void setup()
     sendDataToServerThread.setInterval(1000);
     sendDataToServerThread.onRun([]() 
     {
-        DynamicJsonDocument document(1024);
-        fillBoardData(document);
-        fillSensorsData(document);
+        auto root = SD.open("/DATA/");
 
-        String json;
-        serializeJson(document, json);
-        printJsonToSerial(json);
-        sendJsonToServer(json);
-    });
-    
-    /* TODO: Протестировать работоспособность */
-    CheckFiles.setInterval(1000);
-    CheckFiles.onRun([]()
-    {
-        File root = SD.open("/DATA/");
-        if(!root) {
-            Serial.println("Failed to open directory");
-            return;
-        }
-        if(!root.isDirectory()) {
-            Serial.println("Not a directory");
+        if (!root) 
+        {
+            Serial.println("Не удалось открыть папку /DATA/");
+
             return;
         }
 
-        File file = root.openNextFile();
-        while(file) {
+        File file;
+
+        do
+        {
             String json;
+            file = root.openNextFile();
+            
             while(file.available()) {
                 json += (char)file.read();
             }
-            if (sendJsonToServer(json)) {
-                deleteFile(SD, file.name());
+
+            if (api.sendSensorsData(json)) {
+                sdСard.deleteFile(
+                    file.name()
+                );
             }
-            file = root.openNextFile();
         }
+        while (file);
+
+        // DynamicJsonDocument document(1024);
+        // fillBoardData(document);
+        // fillSensorsData(document);
+
+        // String json;
+        // serializeJson(document, json);
+        // printJsonToSerial(json);
+        // sendJsonToServer(json);
     });
 
     while
     (
-        !trySetupSecureDigitalCard()
+        !sdСard.trySetupSecureDigitalCard()
     );
 
     connectToWifi();

@@ -5,27 +5,29 @@
 #include "FS.h"
 #include "Thread.h"
 
+/* Фасад для работы с SD картой */
 class SDCard {
+    private:
+        fs::FS& _fileSystem;
+
     public:
-        SDCard();
+        /* Инициализирует файловую систему */
+        SDCard(fs::FS& fileSystem);
 
         /* Пытается инициализировать SD карту и определяет ее доступность */
         bool trySetupSecureDigitalCard();
 
         /* Создаёт директорию по указанному пути */
-        void createDir(fs::FS &fs, const char * path);
+        bool createDirectory(const char* filepath);
 
         /* Создаёт новый файл и записывает в него сообщение */
-        void writeFile(fs::FS &fs, const char * path, const char * message);
+        void writeContent(const char* filepath, const char* content);
 
         /* Удаляет файл по указанному пути */
-        void deleteFile(fs::FS &fs, const char * path);
+        bool deleteFile(const char* filepath);
 
-        /* Создаёт файл и записывает в него json */
-        void printJsonToFile(String &json);
-
-        /* Потоко проверки файлов на отправку на сервер */
-        Thread CheckFiles = Thread();
+        /* Создаёт файл и записывает в него Json */
+        void writeJson(String &json, String& filename);
 };
 
 #endif

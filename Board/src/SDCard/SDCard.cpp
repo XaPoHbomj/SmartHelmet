@@ -1,6 +1,6 @@
 #include "SDCard.h"
 
-bool trySetupSecureDigitalCard() 
+bool SDCard::trySetupSecureDigitalCard() 
 {
     if (!SD.begin())
     {
@@ -42,41 +42,41 @@ bool trySetupSecureDigitalCard()
     return true;
 }
 
-void createDir(fs::FS &fs, const char * path) {
-  Serial.printf("Creating Dir: %s\n", path);
-  if(fs.mkdir(path)){
-    Serial.println("Dir created");
-  } else {
-    Serial.println("mkdir failed");
-  }
+bool SDCard::createDirectory(const char* filepath) {
+  return _fileSystem.mkdir(filepath);
 }
 
-void writeFile(fs::FS &fs, const char * path, const char * message) {
-  Serial.printf("Writing file: %s\n", path);
+void SDCard::writeContent(const char* filepath, const char* content) 
+{
+    auto file = _fileSystem.open(filepath, FILE_WRITE);
 
-  File file = fs.open(path, FILE_WRITE);
-  if(!file){
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if(file.print(message)){
-    Serial.println("File written");
-  } else {
-    Serial.println("Write failed");
-  }
-  file.close();
+    if(!file) 
+    {
+        Serial.println("Failed to open file for writing");
+        return;
+    }
+
+    if(file.print(content))
+    {
+        Serial.println("File written");
+    } 
+    else 
+    {
+        Serial.println("Write failed");
+    }
+
+    file.close();
 }
 
-void deleteFile(fs::FS &fs, const char * path) {
-  Serial.printf("Deleting file: %s\n", path);
-  if(fs.remove(path)){
-    Serial.println("File deleted");
-  } else {
-    Serial.println("Delete failed");
-  }
+bool SDCard::deleteFile(const char * filepath) {
+  return _fileSystem.remove(filepath);
 }
 
-void printJsonToFile(String &json, String &time) {
-    String path = "/DATA/" + time + ".txt";
-    writeFile(SD, path.c_str(), json.c_str());
+void SDCard::writeJson(String &json, String& filename) {
+    auto path = "/DATA/" + filename + ".txt";
+
+    writeContent(
+        path.c_str(), 
+        json.c_str()
+    );
 }

@@ -11,14 +11,19 @@ class Api
 
 	public:
 		/* Инициализирует Api */
-		Api(String& baseUrl);
+		Api(const char* baseUrl);
 
         /* 
             Вызывает указанный метод на сервере 
             methodName - имена метода на удаленном сервере 
             arguments - аргументы метода в формате JSON
         */
-        bool call(String& methodName, String& arguments);
+        bool call(const char* methodName, const char* arguments);
+
+        /*
+            Отправляет показания с платы на сервер
+        */
+        bool sendSensorsData(String& json);
 };
 
 #endif
