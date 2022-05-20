@@ -8,4 +8,4 @@ const icon = () => (
   </svg>
 );
 
-export const BatteryIcon = (props) => <Icon component={icon} />;
+export const BatteryIcon = (props) => <Icon component={icon} style={props.style} />;

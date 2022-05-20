@@ -1,7 +1,7 @@
 {
-  "name": "react",
+  "name": "smart-helmet-dashboard",
   "version": "1.0.0",
-  "description": "React example starter project",
+  "description": "SmartHelmet Dashboard Application",
   "keywords": [
     "react",
     "starter"
@@ -10,10 +10,14 @@
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
     "@microsoft/signalr": "6.0.5",
-    "antd": "4.20.5",
+    "antd": "^4.20.5",
+    "chart.js": "^3.7.1",
+    "moment": "2.29.3",
+    "rc-queue-anim": "^2.0.0",
     "react": "18.0.0",
+    "react-chartjs-2": "^4.1.0",
     "react-dom": "18.0.0",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.0"
   },
   "devDependencies": {
     "@babel/runtime": "7.13.8",

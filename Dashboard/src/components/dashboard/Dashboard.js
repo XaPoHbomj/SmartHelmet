@@ -1,19 +1,17 @@
-import { Button, Empty } from "antd";
+﻿import { Button, Empty } from "antd";
 import Modal from "antd/lib/modal/Modal";
 
 export default function Dashboard(props) {
-  const closeButton = (
-    <Button key="close" onClick={props.onDashboardClosed}>
-      Закрыть
-    </Button>
-  );
-
   return (
     <Modal
       title="Статистика"
-      visible={props.isDashboardOpened}
-      onCancel={props.onDashboardClosed}
-      footer={[closeButton]}
+      visible={props.isOpened}
+      onCancel={props.onClose}
+      footer={[
+        <Button key="close" onClick={props.onClose}>
+          Закрыть
+        </Button>
+      ]}
     >
       <Empty
         description="Статистика не найдена"

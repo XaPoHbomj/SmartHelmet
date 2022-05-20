@@ -23,7 +23,7 @@ public class SensorsDataChangedEvent : EventBase
     public GyroscopeValues Gyroscope { get; set; }
 
     /// <summary>
-    /// По датчику расстояния определяет снята ли была каска в момент падения
+    /// По датчику расстояния определяет снята ли каска
     /// </summary>
     public bool IsDismounted => Distance < 5.0f;
     
@@ -32,6 +32,11 @@ public class SensorsDataChangedEvent : EventBase
     /// </summary>
     public bool IsHighSmokeLevel => SmokeValue > 1000.0f;
 
+    /// <summary>
+    /// Определяет заряжается ли каска
+    /// </summary>
+    public bool Charging { get; set; }
+    
     /// <summary>
     /// Определяет упала ли каска
     /// </summary>
