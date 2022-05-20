@@ -11,7 +11,7 @@
 #include "ArduinoJson.h"
 #include "NTPClient.h"
 #include "WiFiUdp.h"
-#include "SDCardManager/SDCard.h"
+#include "SDCard/SDCard.h"
 
 /* MAC-адрес платы */
 auto boardIdentificator = ESP.getEfuseMac();
