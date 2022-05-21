@@ -2,7 +2,7 @@ import HubListener from "./components/signalr/HubListener";
 import SiteHeader from "./components/header/SiteHeader";
 import { CloudOutlined } from "@ant-design/icons";
 import HelmetOverview from "./components/overview/HelmetOverview";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import HelmetPreview from "./components/overview/helmet/HelmetPreview";
 import SignalLevel from "./components/overview/helmet/indicators/SignalLevel";
 import BatteryLevel from "./components/overview/helmet/indicators/BatteryLevel";
@@ -10,11 +10,12 @@ import Timestamp from "./components/overview/helmet/indicators/Timestamp";
 import { notification } from "antd";
 import moment from "moment";
 import Dashboard from "./components/dashboard/Dashboard";
+import useStateRef from 'react-usestateref'
 
 export default function App() {
   const [canShowOverviewSkeleton, showOverviewSkeleton] = useState(true);
-  const [isDashboardOpen, showDashboard] = useState(false);
-  const [dashboardTarget, updateDashboardTarget] = useState({});
+  const [isDashboardOpen, showDashboard, isDashboardOpenRef] = useStateRef(false);
+  const [dashboardTarget, updateDashboardTarget, dashboardTargetRef] = useStateRef({});
   const [helmets, updateHelmets] = useState([]);
   
   const handleEvent = (event) => {
@@ -25,28 +26,39 @@ export default function App() {
       );
 
       if (elementIndex > -1) {
-        existingHelmets[elementIndex] = event;
+        existingHelmets[elementIndex] = {
+		  ...event,
+		  smokeValues: [
+			...existingHelmets[elementIndex].smokeValues,
+			{
+			  timestamp: event.dateTime,
+			  value: event.smokeValue
+			}
+		  ]
+		};
+		
         return existingHelmets;
       }
+	  
+	  const helmet = {
+		...event,
+		smokeValues: []
+	  };
 
       return [
         ...existingHelmets,
-        event
+		helmet
       ];
     });
 	
-	updateDashboardTarget((previousTarget) => {
-	  if (previousTarget && previousTarget.boardIdentificator === event.boardIndetificator) {
-		notification.info({
-		  message: "Данные обновлены",
-		  description: moment().format("DD.MM.yyyy г. в HH:mm:ss")
-		});
+	if (isDashboardOpenRef.current && dashboardTargetRef.current.boardIdentificator === event.boardIdentificator) {
+	  notification.info({
+		message: "Данные обновлены",
+		description: moment().format("DD.MM.yyyy г. в HH:mm:ss")
+	  });
 
-		return event;
-	  }
-	  
-	  return previousTarget;
-	});
+	  updateDashboardTarget(event);
+	}
   };
   
   const hubCallbacks = {
