@@ -1,11 +1,14 @@
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import { notification } from "antd";
-import moment from "moment";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function HubListener(props) {
   const [connection, setConnection] = useState();
 
+  const notifyAboutEvent = (event) => {
+    props.callbacks.onEventReceived && props.callbacks.onEventReceived(event);
+  };
+  
   const onStarted = () => {
     notification.success({
       key: "connecting",
@@ -55,7 +58,7 @@ export default function HubListener(props) {
   };
 
   const onEventReceived = (event) => {
-    props.callbacks.onEventReceived && props.callbacks.onEventReceived(event);
+    notifyAboutEvent(event);
   };
 
   const onEventReceivedFailed = () => {

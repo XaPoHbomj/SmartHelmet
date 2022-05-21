@@ -7,7 +7,7 @@ const baseIndicatorStyle = {
 
 export default function Indicator(props) {
   const indicatorStyle = { ...baseIndicatorStyle };
-
+  
   if (props.stretch) {
     indicatorStyle.width = "100%";
   }

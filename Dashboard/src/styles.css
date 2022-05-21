@@ -7,26 +7,22 @@ body {
   text-align: center;
 }
 
-.ant-card {
-  border-radius: 0.42rem;
-}
-
-.ant-card-head {
-  border-radius: 0.42rem 0.42rem 0 0;
-}
-
 .ant-card-actions {
   border-radius: 0 0 0.42rem 0.42rem;
 }
 
-.ant-btn {
+.ant-card-head, .ant-modal-header {
+  border-radius: 0.42rem 0.42rem 0 0;
+}
+
+.ant-btn, 
+.ant-card,
+.ant-modal-content, 
+.ant-notification-notice, 
+.ant-message-notice-content {
   border-radius: 0.42rem !important;
 }
 
-.ant-modal-header {
-  border-radius: 0.43em 0.43em 0 0;
-}
-
-.ant-modal-content {
-  border-radius: 0.43em;
+.ant-ribbon {
+  border-radius: 0.42rem 0.42rem 0 0.42rem;
 }
