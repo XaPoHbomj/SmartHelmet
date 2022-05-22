@@ -7,6 +7,7 @@
 class Api 
 {
     private:
+        /* Путь к Api */
         String _baseUrl;
 
 	public:

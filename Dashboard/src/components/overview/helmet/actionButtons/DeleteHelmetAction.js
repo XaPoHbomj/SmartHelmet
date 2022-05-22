@@ -19,7 +19,8 @@ export default function DeleteHelmetAction(props) {
       <Tooltip title="Удалить" placement="bottom">
         <DeleteOutlined 
           key="removeHelmet"
-          style={baseActionStyle} />
+          style={baseActionStyle} 
+        />
       </Tooltip>
     </Popconfirm>
   );

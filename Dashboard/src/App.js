@@ -10,51 +10,102 @@ import Timestamp from "./components/overview/helmet/indicators/Timestamp";
 import { notification } from "antd";
 import moment from "moment";
 import Dashboard from "./components/dashboard/Dashboard";
+import useStateRef from 'react-usestateref'
 
 export default function App() {
   const [canShowOverviewSkeleton, showOverviewSkeleton] = useState(true);
-  const [isDashboardOpen, showDashboard] = useState(false);
-  const [dashboardTarget, setDashboardTarget] = useState({});
-  const [helmets, updateHelmets] = useState([]);
+  const [isDashboardOpen, showDashboard, isDashboardOpenRef] = useStateRef(false);
+  
+  const [
+    helmets, 
+    updateHelmets, 
+    helmetsRef
+  ] = useStateRef([]);
+  
+  const [
+    dashboardValues, 
+    updateDashboardValues, 
+    dashboardValuesRef
+  ] = useStateRef([]);
+  
+  const [
+    dashboardTargetIdentificator, 
+    setDashboardTargetIdentificator, 
+    dashboardTargetIdentificatorRef
+  ] = useStateRef(null);
 
-  const handleEvent = (event) => {
-    updateHelmets((previousState) => {
-      const existingHelmets = [...previousState];
-      const elementIndex = existingHelmets.findIndex(
-        (existingHelmet) => existingHelmet.boardIdentificator === event.boardIdentificator
-      );
+  const updateOverview = (event) => {
+    const existingHelmets = [...helmetsRef.current];
+    const helmetIndex = existingHelmets.findIndex(
+      (helmet) => helmet.boardIdentificator === event.boardIdentificator
+    );
 
-      if (elementIndex > -1) {
-        existingHelmets[elementIndex] = event;
-        return existingHelmets;
-      }
-
-      return [
+    if (helmetIndex > -1) {
+      existingHelmets[helmetIndex] = event;
+      updateHelmets(existingHelmets);
+    }
+    else {
+      updateHelmets([
         ...existingHelmets,
         event
-      ];
-    });
+      ]);
+    }
+  }
+  
+  const updateDashboard = (event) => {
+    const boardIdentificator = event.boardIdentificator;
+    const timestamp = moment(event.timestamp).format("HH:mm:ss");
+
+    const existingDashboardValues = [...dashboardValuesRef.current];
+    const dashboardValuesIndex = existingDashboardValues.findIndex(
+      (dashboardValues) => dashboardValues.identificator === boardIdentificator
+    );
+
+    const eventValues = {
+      timestamp,
+      smokeValue: event.smokeValue,
+      gyroscope: event.gyroscope
+    };
+
+    if (dashboardValuesIndex > -1) {
+      const boardValues = existingDashboardValues[dashboardValuesIndex].boardValues;
+      boardValues.push(eventValues);
+
+      if (boardValues.length > 15) {
+        boardValues.shift();
+      }
+    }
+    else {
+      existingDashboardValues.push({
+        identificator: boardIdentificator,
+        boardValues: [eventValues]
+      });
+    }
+    
+    updateDashboardValues(existingDashboardValues);
+
+    if (isDashboardOpenRef.current && dashboardTargetIdentificatorRef.current === boardIdentificator) {
+      notification.info({
+        key: "dashboardUpdated",
+        message: "Данные обновлены",
+        description: moment().format("DD.MM.yyyy г. в HH:mm:ss")
+      });
+    }
+  }
+  
+  const handleEvent = (event) => {
+	updateOverview(event);
+    updateDashboard(event);
   };
 
   const hubCallbacks = {
     onStarted: () => {
       showOverviewSkeleton(false);
     },
-    onEventReceived: (event) => {
-      if (isDashboardOpen) {
-        const timestamp = moment().format("DD.MM.yyyy г. в HH:mm:ss");
-
-        notification.info({
-          message: "Данные обновлены",
-          description: timestamp
-        });
-      }
-
-      handleEvent({
-        ...event,
-        isOnline: true
-      });
-    }
+    onEventReceived: (event) => handleEvent({
+      ...event,
+      isOnline: true
+    })
   };
 
   const onHelmetRemove = (identificator) => {
@@ -69,8 +120,8 @@ export default function App() {
     const helmet = helmets.find(
       (existingHelmet) => existingHelmet.boardIdentificator === identificator
     );
-    
-    setDashboardTarget(helmet);
+
+    setDashboardTargetIdentificator(helmet.boardIdentificator);
     showDashboard(true);
   };
 
@@ -111,14 +162,15 @@ export default function App() {
           >
             <SignalLevel value={helmet.signalLevel}/>
             <BatteryLevel value={helmet.batteryLevel}/>
-            <Timestamp value={moment(helmet.dateTime).format("HH:mm:ss")}/>
+            <Timestamp value={moment(helmet.timestamp).format("HH:mm")}/>
           </HelmetPreview>
         ))}
       </HelmetOverview>
       <Dashboard
-        target={dashboardTarget}
+        targetIdentificator={dashboardTargetIdentificator}
+        values={dashboardValues}
         isOpened={isDashboardOpen}
-        onClose={onDashboardClose}  
+        onClose={onDashboardClose}
       />
     </Fragment>
   );

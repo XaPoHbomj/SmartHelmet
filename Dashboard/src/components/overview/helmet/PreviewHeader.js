@@ -2,8 +2,8 @@ import { Badge, Button, Space, Tooltip, Skeleton, message } from "antd";
 import {
   ThunderboltOutlined,
   CopyOutlined,
-  WarningOutlined,
-  AlertOutlined
+  AlertOutlined, 
+  ExclamationCircleOutlined
 } from "@ant-design/icons";
 import { Fragment, useEffect, useRef } from "react";
 import { FallingIcon } from "../../../extra/FallingIcon";
@@ -65,8 +65,8 @@ export default function PreviewHeader(props) {
     if (props.isDismounted) {
       icons.push(
         <div key="dismountedIcon">
-          <Tooltip title="Сотрудник снял каску">
-            <WarningOutlined style={baseOrangeIconStyle}/>
+          <Tooltip title="Каска снята">
+            <ExclamationCircleOutlined style={baseOrangeIconStyle}/>
           </Tooltip>
         </div>
       );
@@ -75,7 +75,7 @@ export default function PreviewHeader(props) {
     if (props.isFellOff) {
       icons.push(
         <div key="fellOffIcon">
-          <Tooltip title="Зафиксировано падение каски">
+          <Tooltip title="Зафиксирован удар по каске при падении с высоты">
             <div>
               <FallingIcon style={baseRedIconStyle}/>
             </div>
@@ -118,7 +118,7 @@ export default function PreviewHeader(props) {
       </Space>
       <RcQueueAnim
         component={SpaceRef}
-        type={["right"]}
+        type={["top"]}
         leaveReverse
       >
         {renderIcons()}
