@@ -26,40 +26,62 @@ auto api = Api("https://localhost:7217/Board/");
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
 
+/* Wi-Fi UDP */
+WiFiUDP udp;
+
 /* NTP клиент */
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org");
+NTPClient timeClient(udp, "pool.ntp.org");
 
-/* Поток записи данных в файловую систему */
-auto writeDataToFileSystemThread = Thread();
+/* Поток записи данных с сенсоров в файловую систему */
+auto saveThread = Thread();
 
-/* 
-    Поток отправки содержимого на сервер с предварительной проверкой наличия файлов в директории /DATA/. 
-    Если имеются, то отправляет содержимое на сервер. 
-*/
-auto sendDataToServerThread = Thread();
+/* Поток отправки данных с сенсоров на сервер с предварительной проверкой наличия файлов в директории /DATA/ */
+auto sendToServerThread = Thread();
 
 /* Датчики */
 auto gyroscope = Gyroscope();
 auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
 
-/* Заполняет указанный DynamicJsonDocument данными о плате */
-/* TODO: вынести в отдельный класс JSONDocumentManager */
-void fillBoardData(DynamicJsonDocument& document) 
-{
+/* Отправляет данные с сенсоров на сервер с предварительной проверкой наличия файлов в директории /DATA/ */
+void sendSensorsDataToServer() {
+    auto directory = sdСard.open("/DATA/");
+
+    if (!directory) 
+    {
+        Serial.println("Не удалось открыть папку /DATA/");
+
+        return;
+    }
+
+    auto file = directory.openNextFile();
+
+    while (file);
+    {
+        String json = sdСard.read(file);
+
+        if (api.sendSensorsData(json)) {
+            sdСard.deleteFile(
+                file.name()
+            );
+        }
+
+        file = directory.openNextFile();
+    }    
+}
+
+/* Сохраняет данные с сенсоров в файловую систему */
+void saveSensorsDataToFile() {
+    DynamicJsonDocument document(1024);
+
+    auto timestamp = timeClient.getFormattedTime();
     document["boardIdentificator"] = boardIdentificator;
-    document["dateTime"] = timeClient.getFormattedTime();
+    document["timestamp"] = timestamp;
     document["batteryLevel"] = 100.0f; // TODO: добавить вывод заряда батареи
     document["signalLevel"] = wifiClient.getRSSIasQuality(
         WiFi.RSSI()
     );
-}
 
-/* Заполняет указанный DynamicJsonDocument данными с датчиков */
-/* TODO: вынести в отдельный класс JSONDocumentManager*/
-void fillSensorsData(DynamicJsonDocument& document) 
-{
     auto gyroscopeValues = document.createNestedObject("gyroscope");
     auto axis = gyroscope.getAxis();
     gyroscopeValues["x"] = axis.getX();
@@ -69,10 +91,21 @@ void fillSensorsData(DynamicJsonDocument& document)
     document["distance"] = rangefinder.read();
     document["smokeValue"] = smokeDetector.read();
     document["isFellOff"] = false;
+
+    String json;
+    serializeJson(document, json);
+    printJsonToSerial(json);
+
+    String directory = "/ROOT/";
+    auto filepath = directory + timestamp + ".txt";
+
+    sdСard.writeContent(
+        filepath.c_str(), 
+        json.c_str()
+    );
 }
 
 /* Выводит указанный JSON в Serial */
-/* TODO: вынести в отдельный класс JSONDocumentManager*/
 void printJsonToSerial(String& json) 
 {
     Serial.printf("Сформировано: %s\n", json);
@@ -90,11 +123,11 @@ void connectToWifi()
 
     if (!isConnected)
     {
-        Serial.println("Failed to connect");
+        Serial.println("Не удалось подключить к точке доступа Wi-Fi");
     }
     else
     {
-        Serial.println("Connected");
+        Serial.println("Подключение к точке доступа Wi-Fi прошло успешно");
     }
 }
 
@@ -103,50 +136,14 @@ void setup()
 {
     Serial.begin(115200);
 
-    // TODO: реализовать получение времени с платы (Сделано)
     timeClient.setTimeOffset(18000);
     timeClient.begin();
 
-    sendDataToServerThread.setInterval(1000);
-    sendDataToServerThread.onRun([]() 
-    {
-        auto root = SD.open("/DATA/");
+    sendToServerThread.setInterval(1000);
+    sendToServerThread.onRun(sendSensorsDataToServer);
 
-        if (!root) 
-        {
-            Serial.println("Не удалось открыть папку /DATA/");
-
-            return;
-        }
-
-        File file;
-
-        do
-        {
-            String json;
-            file = root.openNextFile();
-            
-            while(file.available()) {
-                json += (char)file.read();
-            }
-
-            if (api.sendSensorsData(json)) {
-                sdСard.deleteFile(
-                    file.name()
-                );
-            }
-        }
-        while (file);
-
-        // DynamicJsonDocument document(1024);
-        // fillBoardData(document);
-        // fillSensorsData(document);
-
-        // String json;
-        // serializeJson(document, json);
-        // printJsonToSerial(json);
-        // sendJsonToServer(json);
-    });
+    saveThread.setInterval(1000);
+    saveThread.onRun(saveSensorsDataToFile);
 
     while
     (
@@ -156,8 +153,16 @@ void setup()
     connectToWifi();
 }
 
-/* Основной цикл */
+/* Безопасно запускает указанный поток */
+void runThreadSafely(Thread& thread) {
+    if (thread.shouldRun()) {
+        thread.run();
+    }
+}
+
+/* Основной цикл выполнения */
 void loop() 
 {
-    //printThread.safeRun();
+    runThreadSafely(saveThread);
+    runThreadSafely(sendToServerThread);
 }

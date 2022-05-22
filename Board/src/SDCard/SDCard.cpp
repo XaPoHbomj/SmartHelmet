@@ -1,5 +1,6 @@
 #include "SDCard.h"
 
+// TODO: Вырезать Serial из этого метода
 bool SDCard::trySetupSecureDigitalCard() 
 {
     if (!SD.begin())
@@ -46,37 +47,30 @@ bool SDCard::createDirectory(const char* filepath) {
   return _fileSystem.mkdir(filepath);
 }
 
-void SDCard::writeContent(const char* filepath, const char* content) 
+bool SDCard::writeContent(const char* filepath, const char* content) 
 {
     auto file = _fileSystem.open(filepath, FILE_WRITE);
-
-    if(!file) 
-    {
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-
-    if(file.print(content))
-    {
-        Serial.println("File written");
-    } 
-    else 
-    {
-        Serial.println("Write failed");
-    }
+    auto isWritten = file && file.print(content);
 
     file.close();
+
+    return isWritten;
 }
 
-bool SDCard::deleteFile(const char * filepath) {
+bool SDCard::deleteFile(const char* filepath) {
   return _fileSystem.remove(filepath);
 }
 
-void SDCard::writeJson(String &json, String& filename) {
-    auto path = "/DATA/" + filename + ".txt";
+File SDCard::open(const char* filepath) {
+    return _fileSystem.open(filepath);
+}
 
-    writeContent(
-        path.c_str(), 
-        json.c_str()
-    );
+String& SDCard::read(File& file) {
+    String content;
+    
+    while (file.available()) {
+        content += (char)file.read();
+    }
+
+    return content;
 }

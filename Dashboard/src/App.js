@@ -54,7 +54,7 @@ export default function App() {
   
   const updateDashboard = (event) => {
     const boardIdentificator = event.boardIdentificator;
-    const timestamp = moment(event.dateTime).format("HH:mm:ss");
+    const timestamp = moment(event.timestamp).format("HH:mm:ss");
 
     const existingDashboardValues = [...dashboardValuesRef.current];
     const dashboardValuesIndex = existingDashboardValues.findIndex(
@@ -162,7 +162,7 @@ export default function App() {
           >
             <SignalLevel value={helmet.signalLevel}/>
             <BatteryLevel value={helmet.batteryLevel}/>
-            <Timestamp value={moment(helmet.dateTime).format("HH:mm")}/>
+            <Timestamp value={moment(helmet.timestamp).format("HH:mm")}/>
           </HelmetPreview>
         ))}
       </HelmetOverview>
