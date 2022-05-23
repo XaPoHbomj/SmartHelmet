@@ -6,7 +6,7 @@ Api::Api(const char* baseUrl)
     _baseUrl = baseUrl;
 }
 
-bool Api::call(const char* methodName, const char* arguments) 
+bool Api::call(const char* methodName, String& arguments) 
 {
     HTTPClient httpClient;
     auto isConnected = httpClient.begin(_baseUrl + methodName);
@@ -19,14 +19,12 @@ bool Api::call(const char* methodName, const char* arguments)
         return false;
     }
 
-Serial.println(arguments);
     auto responseCode = httpClient.POST(arguments);
     auto isSuccess = responseCode >= 200 && responseCode < 300;
-    Serial.println(responseCode);
 
     if (!isSuccess)
     {
-        Serial.println("Не удалось отправить запрос");
+        Serial.printf("Не удалось отправить запрос [Код ошибки: %d]\n", responseCode);
     }
 
     httpClient.end();
@@ -34,10 +32,7 @@ Serial.println(arguments);
     return isSuccess;
 }
 
-bool Api::sendSensorsData(String& json) 
+bool Api::sendEvent(String& json) 
 {
-    return call(
-        "ReceiveSensorsData", 
-        json.c_str()
-    );
+    return call("ReceiveSensorsData", json);
 }

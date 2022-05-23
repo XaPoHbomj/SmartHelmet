@@ -11,17 +11,18 @@
 #include "ArduinoJson.h"
 #include "NTPClient.h"
 #include "WiFiUdp.h"
-#include "SDCard/SDCard.h"
 #include "Api/Api.h"
+#include "EventPoll/EventPoll.h"
+#include <Int64String.h>
 
 /* MAC-адрес платы */
 auto boardIdentificator = ESP.getEfuseMac();
 
 /* SD-карта */
-auto memoryCard = SDCard();
+auto eventPoll = EventPoll("/DATA");
 
 /* Api клиент */
-auto api = Api("https://6448-2a00-1fa1-c6df-ebb7-f47f-6619-ae1a-96b0.eu.ngrok.io/Board/");
+auto api = Api("https://d4c0-178-214-245-19.eu.ngrok.io/Board/");
 
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
@@ -30,7 +31,7 @@ WiFiManager wifiClient;
 WiFiUDP udp;
 
 /* NTP клиент */
-NTPClient timeClient(udp, "pool.ntp.org");
+NTPClient timeClient(udp, "europe.pool.ntp.org", 1000, 18000);
 
 /* Поток записи данных с сенсоров в файловую систему */
 auto saveThread = Thread();
@@ -44,52 +45,40 @@ auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
 
 /* Отправляет данные с сенсоров на сервер с предварительной проверкой наличия файлов в директории /DATA/ */
-void sendSensorsDataToServer() {
-    auto directory = memoryCard.open("/DATA");
+void sendEventsToServer() {
+    auto eventFile = eventPoll.getNextEventFile();
 
-    if (!directory) 
+    while (eventFile)
     {
-        Serial.println("Не удалось открыть папку /DATA/");
+        auto event = eventFile.readString();
 
-        return;
-    }
+        // TODO: Придумать как заблокировать доступ к файлам другим потокам, пока выполняется отправка
+        if (api.sendEvent(event)) 
+        {
+            auto filename = eventFile.name();
+            eventPoll.removeEvent(eventFile);
 
-    auto file = directory.openNextFile();
-    Serial.println(file.name());
-    while (file)
-    {
-        String json = memoryCard.read(file);
-        Serial.println(json);
-        if (api.sendSensorsData(json)) {
-            Serial.println("Отправлено!");
-            memoryCard.deleteFile(
-                file.name()
-            );
+            Serial.printf("Событие из файла %s успешно отправлено на сервер\n", filename);
         }
 
-        Serial.println(file.name());
-
-        file = directory.openNextFile();
+        eventFile = eventPoll.getNextEventFile();
     }    
 }
 
-/* Выводит указанный JSON в Serial */
-void printJsonToSerial(String& json) 
-{
-    Serial.printf("Сформировано: %s\n", json);
-}
-
 /* Сохраняет данные с сенсоров в файловую систему */
-void saveSensorsDataToFile() {
+void saveEventsToFile() {
     DynamicJsonDocument document(1024);
 
     auto timestamp = timeClient.getEpochTime();
-    document["boardIdentificator"] = boardIdentificator;
+    document["boardIdentificator"] = int64String(boardIdentificator);
     document["unixTimestamp"] = timestamp;
     document["batteryLevel"] = 100.0f; // TODO: добавить вывод заряда батареи
     document["signalLevel"] = wifiClient.getRSSIasQuality(
         WiFi.RSSI()
     );
+
+    document["distance"] = rangefinder.read();
+    document["smokeValue"] = smokeDetector.read();
 
     auto gyroscopeValues = document.createNestedObject("gyroscope");
     //auto axis = gyroscope.getAxis();
@@ -97,21 +86,21 @@ void saveSensorsDataToFile() {
     gyroscopeValues["y"] = 0;
     gyroscopeValues["z"] = 0;
 
-    document["distance"] = rangefinder.read();
-    document["smokeValue"] = smokeDetector.read();
-    document["isFellOff"] = false;
     document["charging"] = false;
+    document["isFellOff"] = false;
 
     String json;
     serializeJson(document, json);
-    printJsonToSerial(json);
 
-    auto filepath = "/DATA/" + String(timestamp) + ".txt";
-
-    memoryCard.writeContent(
-        filepath.c_str(), 
-        json.c_str()
-    );
+    if (eventPoll.saveEvent(timestamp, json))
+    {
+        Serial.printf
+        (
+            "Событие %d успешно сохранено: %s\n", 
+            timestamp, 
+            json.c_str()
+        );
+    }
 }
 
 /*  
@@ -139,26 +128,23 @@ void setup()
 {
     Serial.begin(115200);
 
-    //timeClient.setTimeOffset(18000);
-    //timeClient.begin();
-
     sendToServerThread.setInterval(1000);
-    sendToServerThread.onRun(sendSensorsDataToServer);
+    sendToServerThread.onRun(sendEventsToServer);
 
     saveThread.setInterval(1000);
-    saveThread.onRun(saveSensorsDataToFile);
+    saveThread.onRun(saveEventsToFile);
 
     while
     (
-        !memoryCard.trySetupSecureDigitalCard()
+        !eventPoll.trySetup()
     );
 
     connectToWifi();
-    
 }
 
 /* Безопасно запускает указанный поток */
-void runThreadSafely(Thread& thread) {
+void runThreadSafely(Thread& thread) 
+{
     if (thread.shouldRun()) {
         thread.run();
     }
@@ -167,7 +153,8 @@ void runThreadSafely(Thread& thread) {
 /* Основной цикл выполнения */
 void loop() 
 {   
-    //timeClient.update();
+    timeClient.update();
+    
     runThreadSafely(saveThread);
     runThreadSafely(sendToServerThread);
 }
