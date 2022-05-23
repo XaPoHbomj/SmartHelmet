@@ -1,19 +1,12 @@
 #ifndef SDCARD_H
 #define SDCARD_H
 
-#include "SD.h"
-#include "FS.h"
-#include "Thread.h"
+#include <SD.h>
+#include <FS.h>
 
 /* Фасад для работы с SD картой */
 class SDCard {
-    private:
-        fs::FS& _fileSystem;
-
     public:
-        /* Инициализирует файловую систему */
-        SDCard(fs::FS& fileSystem);
-
         /* Пытается инициализировать SD карту и определяет ее доступность */
         bool trySetupSecureDigitalCard();
 
@@ -30,7 +23,7 @@ class SDCard {
         File open(const char* filepath);
 
         /* Возвращает содержимое файла */
-        String& read(File& file);
+        String read(File& file);
 };
 
 #endif

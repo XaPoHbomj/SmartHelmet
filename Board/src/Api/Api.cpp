@@ -9,9 +9,8 @@ Api::Api(const char* baseUrl)
 bool Api::call(const char* methodName, const char* arguments) 
 {
     HTTPClient httpClient;
-    httpClient.addHeader("Content-Type", "application/json");
-
     auto isConnected = httpClient.begin(_baseUrl + methodName);
+    httpClient.addHeader("Content-Type", "application/json");
 
     if (!isConnected) 
     {
@@ -20,8 +19,10 @@ bool Api::call(const char* methodName, const char* arguments)
         return false;
     }
 
+Serial.println(arguments);
     auto responseCode = httpClient.POST(arguments);
     auto isSuccess = responseCode >= 200 && responseCode < 300;
+    Serial.println(responseCode);
 
     if (!isSuccess)
     {

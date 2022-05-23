@@ -11,9 +11,14 @@ public abstract class EventBase
     public string BoardIdentificator { get; set; }
 
     /// <summary>
-    /// Дата и время получения события
+    /// Дата и время получения события (UTC)
     /// </summary>
-    public DateTimeOffset Timestamp { get; set; }
+    public DateTimeOffset Timestamp => DateTimeOffset.FromUnixTimeSeconds(UnixTimestamp);
+
+    /// <summary>
+    /// Дата и время получения события (Unix)
+    /// </summary>
+    public long UnixTimestamp { get; set; }
     
     /// <summary>
     /// Уровень заряда платы

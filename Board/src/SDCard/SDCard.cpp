@@ -44,33 +44,26 @@ bool SDCard::trySetupSecureDigitalCard()
 }
 
 bool SDCard::createDirectory(const char* filepath) {
-  return _fileSystem.mkdir(filepath);
+  return SD.mkdir(filepath);
 }
 
 bool SDCard::writeContent(const char* filepath, const char* content) 
 {
-    auto file = _fileSystem.open(filepath, FILE_WRITE);
+    auto file = SD.open(filepath, FILE_WRITE, true);
     auto isWritten = file && file.print(content);
-
     file.close();
 
     return isWritten;
 }
 
 bool SDCard::deleteFile(const char* filepath) {
-  return _fileSystem.remove(filepath);
+  return SD.remove(filepath);
 }
 
 File SDCard::open(const char* filepath) {
-    return _fileSystem.open(filepath);
+    return SD.open(filepath, FILE_READ, true);
 }
 
-String& SDCard::read(File& file) {
-    String content;
-    
-    while (file.available()) {
-        content += (char)file.read();
-    }
-
-    return content;
+String SDCard::read(File& file) {
+    return file.readString();
 }
