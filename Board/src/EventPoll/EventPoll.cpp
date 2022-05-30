@@ -33,10 +33,9 @@ bool EventPoll::saveEvent(unsigned long timestamp, String& json)
     return isCreated;
 }
 
-File EventPoll::getNextEventFile() 
+File EventPoll::getSource() 
 {
-    auto directory = SD.open(_folder, FILE_READ);
-    return directory.openNextFile();
+    return SD.open(_folder, FILE_READ);
 }
 
 bool EventPoll::removeEvent(File eventFile)

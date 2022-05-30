@@ -23,8 +23,8 @@ class EventPoll {
         /* Сохраняет событие в формате Json */
         bool saveEvent(unsigned long timestamp, String& json);
 
-        /* Возвращает первый доступный файл с событием */
-        File getNextEventFile();
+        /* Возвращает ссылку на директорию с событиями */
+        File getSource();
 
         /* Удаляет указанный файл с событием */
         bool removeEvent(File eventFile);

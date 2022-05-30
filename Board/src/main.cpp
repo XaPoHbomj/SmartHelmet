@@ -22,7 +22,7 @@ auto boardIdentificator = ESP.getEfuseMac();
 auto eventPoll = EventPoll("/DATA");
 
 /* Api клиент */
-auto api = Api("https://d4c0-178-214-245-19.eu.ngrok.io/Board/");
+auto api = Api("https://aff9-2a00-1fa1-84ec-1a9d-648d-89f0-3f32-5d22.eu.ngrok.io/Board/");
 
 /* Wi-Fi клиент */
 WiFiManager wifiClient;
@@ -31,7 +31,7 @@ WiFiManager wifiClient;
 WiFiUDP udp;
 
 /* NTP клиент */
-NTPClient timeClient(udp, "europe.pool.ntp.org", 1000, 18000);
+NTPClient timeClient(udp, "europe.pool.ntp.org", 0, 1000);
 
 /* Поток записи данных с сенсоров в файловую систему */
 auto saveThread = Thread();
@@ -40,33 +40,76 @@ auto saveThread = Thread();
 auto sendToServerThread = Thread();
 
 /* Датчики */
-//auto gyroscope = Gyroscope();
+auto gyroscope = Gyroscope();
 auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
 
+/*  
+    Подключает Wi-Fi клиент к точке доступа.
+    В случае, если пользователь не подключился, создает собственную точку доступа и ожидает
+ */
+bool connectToWifi() 
+{   
+    wifiClient.setConnectTimeout(300);
+    auto isConnected = wifiClient.autoConnect("TestConnect", "password");
+
+    if (!isConnected)
+    {
+        Serial.println("Не удалось подключить к точке доступа Wi-Fi");
+    }
+    else
+    {
+        Serial.println("Подключение к точке доступа Wi-Fi прошло успешно");
+    }
+
+    return isConnected;
+}
+
 /* Отправляет данные с сенсоров на сервер с предварительной проверкой наличия файлов в директории /DATA/ */
-void sendEventsToServer() {
-    auto eventFile = eventPoll.getNextEventFile();
+void sendEventsToServer()
+{
+    auto directory = eventPoll.getSource();
+    auto eventFile = directory.openNextFile();
 
     while (eventFile)
     {
-        auto event = eventFile.readString();
+        auto filename = eventFile.name();
 
-        // TODO: Придумать как заблокировать доступ к файлам другим потокам, пока выполняется отправка
-        if (api.sendEvent(event)) 
+        if (eventFile.size() > 0) 
         {
-            auto filename = eventFile.name();
+            auto event = eventFile.readString();
+            
+            if (api.sendEvent(event)) 
+            {
+                eventPoll.removeEvent(eventFile);
+
+                Serial.printf("Событие из файла %s успешно отправлено на сервер\n", filename);
+            }
+            else
+            {
+                Serial.println("Не удалось отправить запрос");
+
+                break;
+            }
+
+            eventFile.close();
+        }
+        else 
+        {
             eventPoll.removeEvent(eventFile);
 
-            Serial.printf("Событие из файла %s успешно отправлено на сервер\n", filename);
+            Serial.printf("Пустое событие %s было удалено\n", filename);
         }
 
-        eventFile = eventPoll.getNextEventFile();
-    }    
+        eventFile = directory.openNextFile();
+    } 
 }
 
 /* Сохраняет данные с сенсоров в файловую систему */
-void saveEventsToFile() {
+void saveEventsToFile() 
+{
+    timeClient.update();
+
     DynamicJsonDocument document(1024);
 
     auto timestamp = timeClient.getEpochTime();
@@ -81,10 +124,10 @@ void saveEventsToFile() {
     document["smokeValue"] = smokeDetector.read();
 
     auto gyroscopeValues = document.createNestedObject("gyroscope");
-    //auto axis = gyroscope.getAxis();
-    gyroscopeValues["x"] = 0;
-    gyroscopeValues["y"] = 0;
-    gyroscopeValues["z"] = 0;
+    auto axis = gyroscope.getAxis();
+    gyroscopeValues["x"] = axis.getX();
+    gyroscopeValues["y"] = axis.getY();
+    gyroscopeValues["z"] = axis.getZ();
 
     document["charging"] = false;
     document["isFellOff"] = false;
@@ -103,35 +146,15 @@ void saveEventsToFile() {
     }
 }
 
-/*  
-    Подключает Wi-Fi клиент к точке доступа.
-    В случае, если пользователь не подключился, создает собственную точку доступа и ожидает
- */
-void connectToWifi() 
-{
-    // TODO: пофиксить авто-коннект к точке доступа (Типо Сделано)
-    wifiClient.setConnectTimeout(300);
-    auto isConnected = wifiClient.autoConnect("TestConnect", "password");
-
-    if (!isConnected)
-    {
-        Serial.println("Не удалось подключить к точке доступа Wi-Fi");
-    }
-    else
-    {
-        Serial.println("Подключение к точке доступа Wi-Fi прошло успешно");
-    }
-}
-
 /* Настраивает плату */
 void setup() 
 {
     Serial.begin(115200);
 
-    sendToServerThread.setInterval(1000);
+    sendToServerThread.setInterval(10000);
     sendToServerThread.onRun(sendEventsToServer);
 
-    saveThread.setInterval(1000);
+    saveThread.setInterval(10000);
     saveThread.onRun(saveEventsToFile);
 
     while
@@ -152,9 +175,7 @@ void runThreadSafely(Thread& thread)
 
 /* Основной цикл выполнения */
 void loop() 
-{   
-    timeClient.update();
-    
+{ 
     runThreadSafely(saveThread);
     runThreadSafely(sendToServerThread);
 }

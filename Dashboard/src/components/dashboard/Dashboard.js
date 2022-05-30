@@ -11,6 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import moment from "moment";
 
 ChartJS.register(
   CategoryScale,
@@ -60,11 +61,15 @@ export default function Dashboard(props) {
     );
     
     if (dashboardValues) {
+      const boardValues = dashboardValues.boardValues.sort(
+        (left, right) => left.unix - right.unix
+      );
+
       const chartData = {
-        labels: dashboardValues.boardValues.map(boardValue => boardValue.timestamp),
+        labels: boardValues.map(boardValue => boardValue.timestamp),
         datasets: [{
           label: "Уровень задымления",
-          data: dashboardValues.boardValues.map(boardValue => boardValue.smokeValue),
+          data: boardValues.map(boardValue => boardValue.smokeValue),
           borderColor: 'rgb(255, 99, 132, 0.7)',
           backgroundColor: 'rgba(255, 99, 132, 0.7)',
           borderWidth: 2

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Text.Json;
 using WebServer.Events;
 using WebServer.Hubs;
 
@@ -55,8 +56,9 @@ public class BoardController : ControllerBase
         {
             _logger.LogInformation
             (
-                "Событие \"{EventType}\" получено с платы", 
-                @event.GetType()
+                "Событие \"{EventType}\" получено с платы: {Json}", 
+                @event.GetType(),
+                JsonSerializer.Serialize(@event)
             );
         }
 

@@ -30,7 +30,7 @@ public class SensorsDataChangedEvent : EventBase
     /// <summary>
     /// По датчику дыма определяет высокий ли уровень задымления вокруг платы
     /// </summary>
-    public bool IsHighSmokeLevel => SmokeValue > 1000.0f;
+    public bool IsHighSmokeLevel => SmokeValue >= 2000.0f;
 
     /// <summary>
     /// Определяет заряжается ли каска

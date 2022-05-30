@@ -14,20 +14,11 @@ bool Api::call(const char* methodName, String& arguments)
 
     if (!isConnected) 
     {
-        Serial.printf("Не удалось подключиться к %s\n", _baseUrl);
-
         return false;
     }
 
     auto responseCode = httpClient.POST(arguments);
     auto isSuccess = responseCode >= 200 && responseCode < 300;
-
-    if (!isSuccess)
-    {
-        Serial.printf("Не удалось отправить запрос [Код ошибки: %d]\n", responseCode);
-    }
-
-    httpClient.end();
 
     return isSuccess;
 }

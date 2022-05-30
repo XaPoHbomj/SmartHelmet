@@ -63,6 +63,7 @@ export default function App() {
 
     const eventValues = {
       timestamp,
+      unix: event.unixTimestamp,
       smokeValue: event.smokeValue,
       gyroscope: event.gyroscope
     };
