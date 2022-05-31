@@ -14,6 +14,7 @@
 #include "Api/Api.h"
 #include "EventPoll/EventPoll.h"
 #include <Int64String.h>
+#include "ImpactSensor/ImpactSensor.h"
 
 /* MAC-адрес платы */
 auto boardIdentificator = ESP.getEfuseMac();
@@ -39,10 +40,14 @@ auto saveThread = Thread();
 /* Поток отправки данных с сенсоров на сервер с предварительной проверкой наличия файлов в директории /DATA/ */
 auto sendToServerThread = Thread();
 
+/* Поток, отслеживающий изменения на датчике удара */
+auto fellOffListener = Thread();
+
 /* Датчики */
 auto gyroscope = Gyroscope();
 auto smokeDetector = SmokeDetector(32);
 auto rangefinder = Rangefinder(16, 17);
+auto impactSensor = ImpactSensor(33);
 
 /*  
     Подключает Wi-Fi клиент к точке доступа.
@@ -106,7 +111,7 @@ void sendEventsToServer()
 }
 
 /* Сохраняет данные с сенсоров в файловую систему */
-void saveEventsToFile() 
+void saveEventsToFile(bool isFellOff) 
 {
     timeClient.update();
 
@@ -130,7 +135,7 @@ void saveEventsToFile()
     gyroscopeValues["z"] = axis.getZ();
 
     document["charging"] = false;
-    document["isFellOff"] = false;
+    document["isFellOff"] = isFellOff;
 
     String json;
     serializeJson(document, json);
@@ -146,6 +151,15 @@ void saveEventsToFile()
     }
 }
 
+/* Обработчик события удара по каске (падения) */
+void onFellOff() 
+{
+    if (impactSensor.isImpacted()) 
+    {
+        saveEventsToFile(true);
+    }
+}
+
 /* Настраивает плату */
 void setup() 
 {
@@ -155,7 +169,13 @@ void setup()
     sendToServerThread.onRun(sendEventsToServer);
 
     saveThread.setInterval(10000);
-    saveThread.onRun(saveEventsToFile);
+    saveThread.onRun([]()
+    {
+        saveEventsToFile(false);
+    });
+
+    fellOffListener.setInterval(50);
+    fellOffListener.onRun(onFellOff);
 
     while
     (
@@ -178,4 +198,5 @@ void loop()
 { 
     runThreadSafely(saveThread);
     runThreadSafely(sendToServerThread);
+    runThreadSafely(fellOffListener);
 }
