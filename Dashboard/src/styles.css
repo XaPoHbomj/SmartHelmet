@@ -1,0 +1,28 @@
+body {
+  padding: 25px;
+}
+
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.ant-card-actions {
+  border-radius: 0 0 0.42rem 0.42rem;
+}
+
+.ant-card-head, .ant-modal-header {
+  border-radius: 0.42rem 0.42rem 0 0;
+}
+
+.ant-btn, 
+.ant-card,
+.ant-modal-content, 
+.ant-notification-notice, 
+.ant-message-notice-content {
+  border-radius: 0.42rem !important;
+}
+
+.ant-ribbon {
+  border-radius: 0.42rem 0.42rem 0 0.42rem;
+}

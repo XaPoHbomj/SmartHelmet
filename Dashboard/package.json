@@ -1,0 +1,39 @@
+{
+  "name": "smart-helmet-dashboard",
+  "version": "1.0.0",
+  "description": "SmartHelmet Dashboard Application",
+  "keywords": [
+    "react",
+    "starter"
+  ],
+  "main": "src/index.js",
+  "dependencies": {
+    "@babel/runtime": "^7.18.0",
+    "@ant-design/icons": "^4.7.0",
+    "@microsoft/signalr": "6.0.5",
+    "antd": "^4.20.5",
+    "chart.js": "^3.7.1",
+    "moment": "2.29.3",
+    "rc-queue-anim": "^2.0.0",
+    "react": "18.0.0",
+    "react-chartjs-2": "^4.1.0",
+    "react-dom": "18.0.0",
+    "react-scripts": "^5.0.0",
+    "react-usestateref": "^1.0.8"
+  },
+  "devDependencies": {
+    "typescript": "4.1.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
