@@ -1,6 +1,10 @@
 # SmartHelmet
 Проект автоматизированного контроля за соблюдением мер техники безопасности на территории промышленного предприятия
 
+[Видеопрезентация](https://github.com/XaPoHbomj/SmartHelmet/raw/master/SmartHelmet.mp4 "Описание проекта")
+
+[Выступление на защите и демонстрация проекта](https://disk.yandex.com/i/0TxKyO8ykgEsxA "Live-презентация проекта")
+
 ## Сборка и запуск
 ### Микроконтроллер
 Необходимо скачать и установить бесплатное расширение [PlatformIO](https://github.com/platformio "PlatformIO") для Visual Studio Code. Конфигурация уже находится в репозитории
