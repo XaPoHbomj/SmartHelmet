@@ -1,35 +1,35 @@
 # SmartHelmet
-Проект автоматизированного контроля за соблюдением мер техники безопасности на территории промышленного предприятия
+The project provides for the possibility of automated control over compliance with safety measures on the territory of an industrial enterprise
 
-[Видеопрезентация](https://github.com/XaPoHbomj/SmartHelmet/raw/master/SmartHelmet.mp4 "Описание проекта")
+[Presentation](https://github.com/XaPoHbomj/SmartHelmet/raw/master/SmartHelmet.mp4 "Описание проекта")
 
-[Выступление на защите и демонстрация проекта](https://disk.yandex.com/i/0TxKyO8ykgEsxA "Live-презентация проекта")
+[Demonstration](https://disk.yandex.com/i/0TxKyO8ykgEsxA "Live-презентация проекта")
 
-## Скриншоты
+## Screenshots
 ![image](https://user-images.githubusercontent.com/55300023/235252974-9380d691-94aa-4b8a-881a-76c01e9d4c9b.png)
 ![image](https://user-images.githubusercontent.com/55300023/235253047-39815219-9b55-4046-8e98-e39f597b54b4.png)
 
-## Сборка и запуск
-### Микроконтроллер
-Необходимо скачать и установить бесплатное расширение [PlatformIO](https://github.com/platformio "PlatformIO") для Visual Studio Code. Конфигурация уже находится в репозитории
+## Build and startup
+### Microcontoller
+You need to download and install the free [PlatformIO](https://github.com/platformio "PlatformIO") extension for Visual Studio Code. The configuration is already in the repository
 
-### Веб-сервер (.NET 6.0)
-Можно собрать и запустить без дополнительных усилий
+### Backend (.NET 6.0)
+Can be assembled and started without additional effort
 
-### Веб-приложение
-Для сборки и запуска необходимо скачать и установить NodeJS.
+### Frontend
+To build and run, you need to download and install NodeJS.
 
-Установка зависимостей производится в папке Dashboard, где находится файл package.json:
+Dependencies should be installed in the Dashboard folder where the package.json file is located:
 ```shell
 cd .../Dashboard
 npm install
 ```
 
-Запуск приложения осуществляется следующими командами:
+You can start the application with the following commands:
 ```shell
 cd .../Dashboard
 npm start
 ```
 
-## Архитектура
+## Project Architecture
 ![Архитектура](https://i.imgur.com/Zyma83u.png "Архитектура")
