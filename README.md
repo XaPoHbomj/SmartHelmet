@@ -1,9 +1,9 @@
 # SmartHelmet
-The project provides for the possibility of automated control over compliance with safety measures on the territory of an industrial enterprise
+This system provides the possibility of automated control of compliance with security measures on the territory of an industrial enterprise
 
-[Presentation](https://github.com/XaPoHbomj/SmartHelmet/raw/master/SmartHelmet.mp4 "Описание проекта")
+[Presentation](https://github.com/XaPoHbomj/SmartHelmet/raw/master/SmartHelmet.mp4 "Project description")
 
-[Demonstration](https://disk.yandex.com/i/0TxKyO8ykgEsxA "Live-презентация проекта")
+[Demonstration](https://disk.yandex.com/i/0TxKyO8ykgEsxA "Project description")
 
 ## Screenshots
 ![image](https://user-images.githubusercontent.com/55300023/235252974-9380d691-94aa-4b8a-881a-76c01e9d4c9b.png)
@@ -14,7 +14,7 @@ The project provides for the possibility of automated control over compliance wi
 You need to download and install the free [PlatformIO](https://github.com/platformio "PlatformIO") extension for Visual Studio Code. The configuration is already in the repository
 
 ### Backend (.NET 6.0)
-Can be assembled and started without additional effort
+Can be built and started without additional effort
 
 ### Frontend
 To build and run, you need to download and install NodeJS.
@@ -32,4 +32,4 @@ npm start
 ```
 
 ## Project Architecture
-![Архитектура](https://i.imgur.com/Zyma83u.png "Архитектура")
+![Architecture](https://i.imgur.com/Zyma83u.png "Architecture")
